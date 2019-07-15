@@ -1,0 +1,80 @@
+{
+  "name": "coc-todolist",
+  "version": "1.0.0",
+  "description": "todolist/task manager extension for coc.nvim",
+  "main": "lib/index.js",
+  "publisher": "voldikss",
+  "keywords": [
+    "coc.nvim",
+    "todo"
+  ],
+  "engines": {
+    "coc": "^0.0.70"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "watch": "webpack --watch",
+    "build": "webpack",
+    "prepare": "npx npm-run-all clean build"
+  },
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "todo.filetype": {
+          "type": "string",
+          "default": "todo",
+          "description": "filetype to write todo content"
+        },
+        "todo.autoSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "sync your todo every day when coc was started"
+        },
+        "todolist.todolistDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "directory for your todo files"
+        }
+      }
+    },
+    "commands": [
+      {
+        "title": "todolist",
+        "command": "todolist.new"
+      },
+      {
+        "title": "upload todolist to gist",
+        "command": "todolist.upload"
+      },
+      {
+        "title": "download todolist from gist",
+        "command": "todo.download"
+      },
+      {
+        "title": "export todolist to markdown or json file",
+        "command": "todolist.export"
+      }
+    ]
+  },
+  "author": "dyzplus@gmail.com",
+  "license": "MIT",
+  "devDependencies": {
+    "@chemzqm/tsconfig": "^0.0.3",
+    "@chemzqm/tslint-config": "^1.0.18",
+    "@types/node": "^12.0.10",
+    "@types/uuid": "^3.4.4",
+    "coc.nvim": "^0.0.71",
+    "rimraf": "^2.6.3",
+    "ts-loader": "^6.0.4",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.2",
+    "uuid": "^3.3.2",
+    "webpack": "^4.35.0",
+    "webpack-cli": "^3.3.5"
+  },
+  "dependencies": {}
+}
