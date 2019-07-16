@@ -1,4 +1,4 @@
-import {workspace, MsgTypes} from 'coc.nvim'
+import {workspace} from 'coc.nvim'
 import fs from 'fs'
 import util from 'util'
 
@@ -41,8 +41,4 @@ export function group<T>(array: T[], size: number): T[][] {
     res.push(array.slice(i * size, (i + 1) * size))
   }
   return res
-}
-
-export function showMessage(message: string, type: MsgTypes = 'more'): void {
-  workspace.showMessage(`[coc-translator] ${message}`, type)
 }

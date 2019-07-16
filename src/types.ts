@@ -1,8 +1,17 @@
 
 export interface TodoItem {
-  engine: string
-  query: string
-  phonetic: string
-  paraphrase: string
-  explain: string[]
+  title: string
+  created_at: string
+  alarm_at: string
+  status: string
+  alarm?: boolean
+  tags?: string[]
+  content?: string[]
 }
+
+export interface TodoItemDB {
+  id: string
+  content: TodoItem
+  path: string
+}
+

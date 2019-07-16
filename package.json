@@ -47,6 +47,10 @@
         "command": "todolist.new"
       },
       {
+        "title": "todolist",
+        "command": "todolist.register"
+      },
+      {
         "title": "upload todolist to gist",
         "command": "todolist.upload"
       },
@@ -65,9 +69,11 @@
   "devDependencies": {
     "@chemzqm/tsconfig": "^0.0.3",
     "@chemzqm/tslint-config": "^1.0.18",
+    "@types/js-yaml": "^3.12.1",
     "@types/node": "^12.0.10",
     "@types/uuid": "^3.4.4",
     "coc.nvim": "^0.0.71",
+    "js-yaml": "^3.13.1",
     "rimraf": "^2.6.3",
     "ts-loader": "^6.0.4",
     "tslint": "^5.18.0",
