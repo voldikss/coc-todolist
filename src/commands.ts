@@ -1,56 +1,57 @@
-import { workspace, Uri } from 'coc.nvim'
-import yaml from 'js-yaml'
-import { join } from 'path'
-import { existsSync, mkdirSync } from 'fs'
-import { TodoItem } from './types'
+import { workspace } from 'coc.nvim'
+import { TodoItem, TodoStatus } from './types'
 import DB from './util/db'
 
-export async function newTodo(): Promise<void> {
-  const { nvim } = workspace
-  nvim.pauseNotification()
-  await workspace.nvim.command('tab new .todo')
-  await nvim.command('set filetype=todo')
-  await nvim.command('set syntax=yaml')
-  nvim.command('set nobuflisted', true)
-  nvim.command('set buftype=nowrite', true)
-  nvim.command('normal gg$', true)
-  await nvim.resumeNotification()
+export async function newTodo(db: DB): Promise<void> {
+  let desc: string
+  let date: string
+  let status: TodoStatus
+  let due: string | null
+
+  desc = await workspace.requestInput('Describe todo content')
+  if (!desc || desc.trim() === '')
+    return
+
+  desc = desc.trim()
+  date = await workspace.nvim.call('strftime', '%Y-%m-%d %T')
+  status = 'active'
+
+  due = await workspace.requestInput('Enter due date')
+  if (due && due.trim() !== '')
+    due = due.trim()
+
+  const todo: TodoItem = { desc, status, date, due }
+  db.add(todo)
+
+  workspace.showMessage("new todo added")
 }
 
-export async function registerTodo(storagePath: string): Promise<void> {
-  const document = await workspace.document
+export async function updateTodo(db: DB): Promise<void> {
+  const doc = await workspace.document
+  const filetype = await doc.buffer.getOption('filetype')
+  if (!(filetype && filetype === 'todo'))
+    return
 
   let text: string
-  if (document && document.textDocument) {
-    text = document.textDocument.getText()
+  if (doc && doc.textDocument) {
+    text = doc.textDocument.getText()
     if (!text)
       return
   }
-  const obj: TodoItem = yaml.safeLoad(text)
-  // const obj: TodoItem = {
-  //   title: obj['Title'],
-  //   created_at: obj['Create_At'],
-  //   status: obj['Status'],
-  //   alarm: obj['Alarm'] || null,
-  //   alarm_at: obj['Alarm_At'] || null,
-  //   tags: obj['Tags'] || null,
-  //   content: obj['Content'] || null
-  // }
 
-  workspace.showMessage(JSON.stringify(obj))
-  // TODO: improve
-  if (!('Title' in obj && 'Create_At' in obj && 'Status' in obj)) {
-    workspace.showMessage('Invalid todolist content')
-    return
+  // TODO: check invalid
+  const todo = {} as TodoItem
+  const lines = text.trim().split('\n')
+  for (const i of Object.keys(lines)) {
+    let line = lines[i]
+    let [key, value] = line.split(':')
+    todo[key] = value
   }
 
-  const config = workspace.getConfiguration('todolist')
-  const maxsize = config.get<number>('maxsize', 5000)
+  // TODO
+  db.add(todo)
 
-  workspace.showMessage(JSON.stringify(obj))
-
-  const db = new DB(storagePath, maxsize)
-  db.add(obj)
+  workspace.showMessage("todo updated")
 }
 
 export async function downloadTodo(): Promise<void> {

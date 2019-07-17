@@ -1,15 +1,13 @@
 import {
   commands,
   ExtensionContext,
-  languages,
   listManager,
   workspace
 } from 'coc.nvim'
-import os from 'os'
 import TodoList from './lists/todolist'
 import { mkdirAsync, statAsync } from './util/io'
 import DB from './util/db'
-import { newTodo, registerTodo, downloadTodo, exportTodo, uploadTodo } from './commands'
+import { newTodo, downloadTodo, exportTodo, uploadTodo, updateTodo } from './commands'
 
 export async function activate(context: ExtensionContext): Promise<void> {
   const { subscriptions, storagePath } = context
@@ -26,14 +24,14 @@ export async function activate(context: ExtensionContext): Promise<void> {
   subscriptions.push(
     commands.registerCommand(
       'todolist.new',
-      async () => await newTodo()
+      async () => await newTodo(db)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
-      'todolist.register',
-      async () => await registerTodo(storagePath)
+      'todolist.update',
+      async () => await updateTodo(db)
     )
   )
 
@@ -59,8 +57,16 @@ export async function activate(context: ExtensionContext): Promise<void> {
   )
 
   subscriptions.push(
+    workspace.registerAutocmd({
+      event: 'BufLeave',
+      request: false,
+      callback: async () => await updateTodo(db)
+    })
+  )
+
+  subscriptions.push(
     listManager.registerList(
-      new TodoList(nvim, storagePath, db)
+      new TodoList(nvim, db)
     )
   )
 }

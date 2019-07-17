@@ -43,7 +43,7 @@
       },
       {
         "title": "todolist",
-        "command": "todolist.register"
+        "command": "todolist.update"
       },
       {
         "title": "upload todolist to gist",

@@ -1,12 +1,8 @@
 
-enum TodoStatus {
-  active, // todo
-  completed, // done
-  cancelled,
-}
+export type TodoStatus = 'active' | 'completed' | 'cancelled'
 
 export interface TodoItem {
-  content: string
+  desc: string
   status: TodoStatus
   date: string
   due: string
@@ -17,4 +13,3 @@ export interface TodoItemDB {
   content: TodoItem
   path: string
 }
-

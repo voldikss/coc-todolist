@@ -31,9 +31,6 @@ export default class DB {
     // TODO: improve
     items.unshift({ id: uuid(), content: todo, path: this.file })
 
-    workspace.showMessage(this.file.toString())
-    workspace.showMessage(JSON.stringify(items))
-
     await writeFile(this.file, JSON.stringify(items, null, 2))
   }
 
@@ -42,6 +39,15 @@ export default class DB {
     let idx = items.findIndex(o => o.id == uid)
     if (idx !== -1) {
       items.splice(idx, 1)
+      await writeFile(this.file, JSON.stringify(items, null, 2))
+    }
+  }
+
+  public async update(uid: string, todo: TodoItem): Promise<void> {
+    let items = await this.load()
+    let idx = items.findIndex(o => o.id == uid)
+    if (idx !== -1) {
+      items[idx].content = todo
       await writeFile(this.file, JSON.stringify(items, null, 2))
     }
   }

@@ -1,12 +1,10 @@
-import { readdirSync, existsSync } from 'fs'
 import {
   ListAction,
   ListContext,
   ListItem,
-  workspace,
-  Uri,
   BasicList,
   Neovim,
+  workspace,
 } from 'coc.nvim'
 import DB from '../util/db'
 import { TodoItem } from '../types'
@@ -19,62 +17,59 @@ export default class TodoList extends BasicList {
 
   constructor(
     protected nvim: Neovim,
-    private rootPath: string,
     private db: DB
   ) {
     super(nvim)
 
-    this.actions.push({
-      name: 'toggle',
-      execute: async (item: ListItem) => {
-        if (Array.isArray(item)) {
-          return
-        }
+    this.addAction('toggle', (item: ListItem) => {
+      if (Array.isArray(item)) {
+        return
       }
     })
 
-    this.actions.push({
-      name: 'preview',
-      execute: async (item: ListItem, context) => {
-        // const todo: TodoItem = item.data.content
-        // await this.preview({
-        //   bufname: 'todolist',
-        //   sketch: true,
-        //   filetype: 'yaml',
-        //   lines: JSON2YAML(todo),
-        // }, context)
-      }
-    })
+    this.addAction('preview', async (item: ListItem, context) => {
+      const todo: TodoItem = item.data.content
+      const lines = Object.keys(todo).map(key => `${key}: ${todo[key]}`)
+      await this.preview({
+        bufname: 'todolist',
+        sketch: true,
+        filetype: 'yaml',
+        lines,
+      }, context)
+    }, { persist: true, reload: true })
 
-    this.actions.push({
-      name: 'edit',
-      execute: async (item: ListItem) => {
-        //
-      }
-    })
+    this.addAction('edit', async (item: ListItem) => {
+      this.db.delete(item.data.id)
+      const todo: TodoItem = item.data.content
+      const lines = Object.keys(todo).map(key => `${key}: ${todo[key]}`)
+      nvim.pauseNotification()
+      await nvim.command('tabnew')
+      await nvim.command('set filetype=todo')
+      await nvim.command('set syntax=yaml') // TODO: use customized highlight instead of yaml syntax
+      nvim.command('set nobuflisted', true)
+      nvim.command('set buftype=nowrite', true)
+      nvim.call('append', ['0', lines])
+      await nvim.resumeNotification()
+    }, { persist: true, reload: true })
 
-    this.actions.push({
-      name: 'delete',
-      execute: async (item: ListItem) => {
-        const { id } = item.data
-        this.db.delete(id)
-      }
-    })
+    this.addAction('delete', async (item: ListItem) => {
+      const { id } = item.data
+      this.db.delete(id)
+    }, { persist: true, reload: true })
 
-    this.actions.push({
-      name: 'cancel',
-      execute: async (item: ListItem) => {
-        //
-      }
-    })
+    this.addAction('cancel', async (item: ListItem) => {
+      const todo: TodoItem = item.data.content
+      const { id } = item.data
+      todo.status = 'cancelled'
+      this.db.update(id, todo)
+    }, { persist: true, reload: true })
   }
 
   public async loadItems(_context: ListContext): Promise<ListItem[]> {
     let arr = await this.db.load()
-    let columns = await this.nvim.getOption('columns') as number
     let res: ListItem[] = []
     for (let item of arr) {
-      let content = item.content.content
+      let content = item.content.desc
       let status = item.content.status
       res.push({
         label: `${content}: ${status}`,
