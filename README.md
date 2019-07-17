@@ -26,11 +26,6 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
     "type": "boolean",
     "default": true,
     "description": "sync your todo every day when coc was started"
-},
-"todolist.todolistDirectory": {
-    "type": "string",
-    "default": "",
-    "description": "directory for your todo files"
 }
 ```
 

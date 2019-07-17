@@ -1,12 +1,12 @@
 
 export interface TodoItem {
-  title: string
-  created_at: string
-  alarm_at: string
-  status: string
-  alarm?: boolean
-  tags?: string[]
-  content?: string[]
+  Title: string
+  Created_At: string
+  Status: string
+  Alarm?: boolean
+  Alarm_At?: string
+  Tags?: string[]
+  Content?: string[]
 }
 
 export interface TodoItemDB {

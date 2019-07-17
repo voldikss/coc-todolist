@@ -4,7 +4,7 @@ import yaml from 'js-yaml'
 import uuid = require('uuid/v1')
 import DB from '../util/db'
 
-export async function registerTodo(todoRootPath: string): Promise<void> {
+export async function registerTodo(storagePath: string): Promise<void> {
   const document = await workspace.document
 
   let text: string
@@ -13,19 +13,20 @@ export async function registerTodo(todoRootPath: string): Promise<void> {
     if (!text)
       return
   }
-  const obj = yaml.safeLoad(text)
-  const todo: TodoItem = {
-    title: obj['Title'],
-    created_at: obj['Create_At'],
-    status: obj['Status'],
-    alarm: obj['Alarm'] || null,
-    alarm_at: obj['Alarm_At'] || null,
-    tags: obj['Tags'] || null,
-    content: obj['Content'] || null
-  }
+  const obj: TodoItem = yaml.safeLoad(text)
+  // const obj: TodoItem = {
+  //   title: obj['Title'],
+  //   created_at: obj['Create_At'],
+  //   status: obj['Status'],
+  //   alarm: obj['Alarm'] || null,
+  //   alarm_at: obj['Alarm_At'] || null,
+  //   tags: obj['Tags'] || null,
+  //   content: obj['Content'] || null
+  // }
 
-  workspace.showMessage(JSON.stringify(todo))
-  if (!(todo.title && todo.created_at && todo.status)) {
+  workspace.showMessage(JSON.stringify(obj))
+  // TODO: improve
+  if (!('Title' in obj && 'Create_At' in obj && 'Status' in obj)) {
     workspace.showMessage('Invalid todolist content')
     return
   }
@@ -33,21 +34,8 @@ export async function registerTodo(todoRootPath: string): Promise<void> {
   const config = workspace.getConfiguration('todolist')
   const maxsize = config.get<number>('maxsize', 5000)
 
-  workspace.showMessage(JSON.stringify(todo))
+  workspace.showMessage(JSON.stringify(obj))
 
-  const db = new DB(todoRootPath, maxsize)
-  db.add(todo)
-
-  // const {nvim} = workspace
-  // const db = new DB(todoRootPath, )
-  // db.add(todo)
-
-  // const lines = text.trim().split('\n')
-  // const todoItem = {}
-  // for (const i of Object.keys(lines)) {
-  //   const line = lines[i]
-  //   workspace.showMessage(line)
-  //   if (line.trim() === '')
-  //     continue
-  // }
+  const db = new DB(storagePath, maxsize)
+  db.add(obj)
 }

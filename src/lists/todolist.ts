@@ -1,4 +1,3 @@
-import { join } from 'path'
 import { readdirSync, existsSync } from 'fs'
 import {
   ListAction,
@@ -10,6 +9,8 @@ import {
   Neovim,
 } from 'coc.nvim'
 import DB from '../util/db'
+import { TodoItem } from '../types'
+import { JSON2YAML } from '../util/util'
 
 export default class TodoList extends BasicList {
   public readonly name = 'todo'
@@ -30,9 +31,17 @@ export default class TodoList extends BasicList {
         if (Array.isArray(item)) {
           return
         }
-        workspace.openResource(
-          Uri.file(join(this.rootPath, item.label)).toString()
-        )
+        const todo: TodoItem = item.data.content
+        // const todoContent = Object.keys(todo).map(key => key + todo[key])
+        nvim.pauseNotification()
+        await workspace.nvim.command('tab new .todo')
+        await nvim.command('set filetype=todo')
+        await nvim.command('set syntax=yaml')
+        nvim.command('set nobuflisted', true)
+        nvim.command('set buftype=nowrite', true)
+        nvim.call('append', ['0', JSON2YAML(todo)])
+        nvim.command('normal gg', true)
+        await nvim.resumeNotification()
       }
     })
 
@@ -46,8 +55,14 @@ export default class TodoList extends BasicList {
 
     this.actions.push({
       name: 'preview',
-      execute: async (item: ListItem) => {
-        //
+      execute: async (item: ListItem, context) => {
+        const todo: TodoItem = item.data.content
+        await this.preview({
+          bufname: 'todolist',
+          sketch: true,
+          filetype: 'yaml',
+          lines: JSON2YAML(todo),
+        }, context)
       }
     })
   }
@@ -57,13 +72,12 @@ export default class TodoList extends BasicList {
     let columns = await this.nvim.getOption('columns') as number
     let res: ListItem[] = []
     for (let item of arr) {
-      let abbr = item.content.title
-      // TODO
-      // let text = item.content[0].padEnd(20) + item.content[1]
-      // let abbr = text.length > columns - 20 ? text.slice(0, columns - 15) + '...' : text
+      let title = item.content.Title
+      let tags = item.content.Tags || []
+      let status = item.content.Status
       res.push({
-        label: abbr,
-        filterText: abbr,
+        label: `${title}: ${status} | ${tags.join('#')}`,
+        filterText: title + status + tags.join(''),
         data: Object.assign({}, item)
       })
     }

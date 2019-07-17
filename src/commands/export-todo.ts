@@ -1,5 +1,5 @@
 import { workspace } from 'coc.nvim'
 
-export async function exportTodo(todoRootPath: string): Promise<void> {
+export async function exportTodo(storagePath: string): Promise<void> {
   //
 }

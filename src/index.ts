@@ -26,19 +26,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   }
   const config = workspace.getConfiguration('todolist')
 
-  const todoRootPath = config
-    .get<string>('root', '~/.coc-todo')
-    .replace(/^~/, os.homedir())
-
-  const db = new DB(todoRootPath, config.get<number>('maxsize', 5000))
-
-  subscriptions.push(
-    workspace.registerAutocmd({
-      event: 'BufEnter',
-      request: false,
-      callback: detectFileName
-    })
-  )
+  const db = new DB(storagePath, config.get<number>('maxsize', 5000))
 
   subscriptions.push(
     commands.registerCommand(
@@ -50,28 +38,28 @@ export async function activate(context: ExtensionContext): Promise<void> {
   subscriptions.push(
     commands.registerCommand(
       'todolist.register',
-      async () => await registerTodo(todoRootPath)
+      async () => await registerTodo(storagePath)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.upload',
-      async () => await uploadTodo(todoRootPath)
+      async () => await uploadTodo(storagePath)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.download',
-      async () => await downloadTodo(todoRootPath)
+      async () => await downloadTodo(storagePath)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.export',
-      async () => await exportTodo(todoRootPath)
+      async () => await exportTodo(storagePath)
     )
   )
 
@@ -91,18 +79,4 @@ export async function activate(context: ExtensionContext): Promise<void> {
       99
     )
   )
-}
-
-async function detectFileName(): Promise<void> {
-  const doc = await workspace.document
-  if (doc && doc.buffer) {
-    const filetype = await doc.buffer.getOption('filetype') as string
-    if (filetype && filetype.trim() !== '') {
-      return
-    }
-    const name = await doc.buffer.name
-    if (name && /\.todo/i.test(name)) {
-      doc.buffer.setOption('filetype', 'todo')
-    }
-  }
 }
