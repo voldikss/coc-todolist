@@ -1,12 +1,15 @@
 
+enum TodoStatus {
+  active, // todo
+  completed, // done
+  cancelled,
+}
+
 export interface TodoItem {
-  Title: string
-  Created_At: string
-  Status: string
-  Alarm?: boolean
-  Alarm_At?: string
-  Tags?: string[]
-  Content?: string[]
+  content: string
+  status: TodoStatus
+  date: string
+  due: string
 }
 
 export interface TodoItemDB {

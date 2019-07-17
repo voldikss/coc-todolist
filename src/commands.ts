@@ -1,8 +1,21 @@
-import { workspace } from 'coc.nvim'
-import { TodoItem } from '../types'
+import { workspace, Uri } from 'coc.nvim'
 import yaml from 'js-yaml'
-import uuid = require('uuid/v1')
-import DB from '../util/db'
+import { join } from 'path'
+import { existsSync, mkdirSync } from 'fs'
+import { TodoItem } from './types'
+import DB from './util/db'
+
+export async function newTodo(): Promise<void> {
+  const { nvim } = workspace
+  nvim.pauseNotification()
+  await workspace.nvim.command('tab new .todo')
+  await nvim.command('set filetype=todo')
+  await nvim.command('set syntax=yaml')
+  nvim.command('set nobuflisted', true)
+  nvim.command('set buftype=nowrite', true)
+  nvim.command('normal gg$', true)
+  await nvim.resumeNotification()
+}
 
 export async function registerTodo(storagePath: string): Promise<void> {
   const document = await workspace.document
@@ -38,4 +51,14 @@ export async function registerTodo(storagePath: string): Promise<void> {
 
   const db = new DB(storagePath, maxsize)
   db.add(obj)
+}
+
+export async function downloadTodo(): Promise<void> {
+  //
+}
+export async function uploadTodo(): Promise<void> {
+  //
+}
+export async function exportTodo(): Promise<void> {
+  //
 }

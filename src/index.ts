@@ -6,15 +6,10 @@ import {
   workspace
 } from 'coc.nvim'
 import os from 'os'
-import { newTodo } from './commands/new-todo'
 import TodoList from './lists/todolist'
-import { completionProvider } from './provider/completion'
 import { mkdirAsync, statAsync } from './util/io'
-import { uploadTodo } from './commands/upload-todo'
-import { downloadTodo } from './commands/download-todo'
-import { exportTodo } from './commands/export-todo'
-import { registerTodo } from './commands/register-todo'
 import DB from './util/db'
+import { newTodo, registerTodo, downloadTodo, exportTodo, uploadTodo } from './commands'
 
 export async function activate(context: ExtensionContext): Promise<void> {
   const { subscriptions, storagePath } = context
@@ -45,38 +40,27 @@ export async function activate(context: ExtensionContext): Promise<void> {
   subscriptions.push(
     commands.registerCommand(
       'todolist.upload',
-      async () => await uploadTodo(storagePath)
+      async () => await uploadTodo()
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.download',
-      async () => await downloadTodo(storagePath)
+      async () => await downloadTodo()
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.export',
-      async () => await exportTodo(storagePath)
+      async () => await exportTodo()
     )
   )
 
   subscriptions.push(
     listManager.registerList(
       new TodoList(nvim, storagePath, db)
-    )
-  )
-
-  subscriptions.push(
-    languages.registerCompletionItemProvider(
-      'todo',
-      'todo',
-      ['todo'],
-      completionProvider,
-      [],
-      99
     )
   )
 }
