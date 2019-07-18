@@ -1,14 +1,13 @@
 import { statAsync, writeFile, readFile } from './io'
 import path from 'path'
 import { TodoItem, TodoItemDB } from '../types'
-import { workspace } from 'coc.nvim'
 import uuid = require('uuid')
 
 export default class DB {
   private file: string
 
-  constructor(directory: string, private maxsize: number) {
-    this.file = path.join(directory, 'todo.json')
+  constructor(directory: string, name: string, private maxsize: number) {
+    this.file = path.join(directory, `${name}.json`)
   }
 
   public async load(): Promise<TodoItemDB[]> {

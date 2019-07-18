@@ -21,11 +21,15 @@ export default class TodoList extends BasicList {
   ) {
     super(nvim)
 
-    this.addAction('toggle', (item: ListItem) => {
-      if (Array.isArray(item)) {
-        return
-      }
-    })
+    this.addAction('toggle', async (item: ListItem) => {
+      const todo: TodoItem = item.data.content
+      const { id } = item.data
+      if (todo.status === 'active')
+        todo.status = 'completed'
+      else if (todo.status === 'completed')
+        todo.status = 'cancelled'
+      await this.db.update(id, todo)
+    }, { persist: true, reload: true })
 
     this.addAction('preview', async (item: ListItem, context) => {
       const todo: TodoItem = item.data.content
@@ -39,7 +43,7 @@ export default class TodoList extends BasicList {
     }, { persist: true, reload: true })
 
     this.addAction('edit', async (item: ListItem) => {
-      this.db.delete(item.data.id)
+      await this.db.delete(item.data.id)
       const todo: TodoItem = item.data.content
       const lines = Object.keys(todo).map(key => `${key}: ${todo[key]}`)
       nvim.pauseNotification()
@@ -48,20 +52,20 @@ export default class TodoList extends BasicList {
       await nvim.command('set syntax=yaml') // TODO: use customized highlight instead of yaml syntax
       nvim.command('set nobuflisted', true)
       nvim.command('set buftype=nowrite', true)
-      nvim.call('append', ['0', lines])
+      nvim.call('append', ['0', lines], true)
       await nvim.resumeNotification()
-    }, { persist: true, reload: true })
+    })
 
     this.addAction('delete', async (item: ListItem) => {
       const { id } = item.data
-      this.db.delete(id)
+      await this.db.delete(id)
     }, { persist: true, reload: true })
 
     this.addAction('cancel', async (item: ListItem) => {
       const todo: TodoItem = item.data.content
       const { id } = item.data
       todo.status = 'cancelled'
-      this.db.update(id, todo)
+      await this.db.update(id, todo)
     }, { persist: true, reload: true })
   }
 

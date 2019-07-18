@@ -7,9 +7,15 @@ import {
 import TodoList from './lists/todolist'
 import { mkdirAsync, statAsync } from './util/io'
 import DB from './util/db'
-import { newTodo, downloadTodo, exportTodo, uploadTodo, updateTodo } from './commands'
+import { TodoCommand } from './commands'
+import { Alarm } from './alarm'
 
 export async function activate(context: ExtensionContext): Promise<void> {
+  const config = workspace.getConfiguration('todolist')
+  const enable = config.get<boolean>('enable', true)
+  if (!enable)
+    return
+
   const { subscriptions, storagePath } = context
   const { nvim } = workspace
 
@@ -17,50 +23,56 @@ export async function activate(context: ExtensionContext): Promise<void> {
   if (!stat || !stat.isDirectory()) {
     await mkdirAsync(storagePath)
   }
-  const config = workspace.getConfiguration('todolist')
 
-  const db = new DB(storagePath, config.get<number>('maxsize', 5000))
+  const maxsize = config.get<number>('maxsize', 5000)
+
+  const AlarmDB = new DB(storagePath, 'alarm', maxsize)
+  const alarm = new Alarm(AlarmDB)
+  alarm.monitor(config.get<string>('alarm', 'floating'))
+
+  const db = new DB(storagePath, 'todolist', maxsize)
+  const todo = new TodoCommand(alarm)
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.new',
-      async () => await newTodo(db)
+      async () => await todo.new(db)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.update',
-      async () => await updateTodo(db)
+      async () => await todo.update(db)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.upload',
-      async () => await uploadTodo()
+      async () => await todo.upload(storagePath, db)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.download',
-      async () => await downloadTodo()
+      async () => await todo.download(storagePath, db)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.export',
-      async () => await exportTodo()
+      async () => await todo.export(db)
     )
   )
 
   subscriptions.push(
     workspace.registerAutocmd({
-      event: 'BufLeave',
-      request: false,
-      callback: async () => await updateTodo(db)
+      event: ['BufLeave'], // FIXME: wont work for :qa
+      request: true,
+      callback: async () => await todo.update(db)
     })
   )
 

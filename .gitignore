@@ -74,3 +74,57 @@ __pycache__
 target/
 **/*.rs.bk
 
+
+# create by https://github.com/iamcco/coc-gitignore (Thu Jul 18 2019 15:06:08 GMT+0800 (GMT+08:00))
+# 1C-Bitrix.gitignore:
+# core
+/bitrix/
+
+# uploaded files
+/upload/
+
+# other files
+test.php
+*.zip
+*.gzip
+*.gz
+*.tgz
+*.tar
+*.gz.[0-9]
+*.sql
+*.log
+*.mp3
+*.exe
+*.db
+*.csv
+*.xml
+*.psd
+*.[oa]
+*~
+
+# create by https://github.com/iamcco/coc-gitignore (Thu Jul 18 2019 15:06:17 GMT+0800 (GMT+08:00))
+# 1C-Bitrix.gitignore:
+# core
+/bitrix/
+
+# uploaded files
+/upload/
+
+# other files
+test.php
+*.zip
+*.gzip
+*.gz
+*.tgz
+*.tar
+*.gz.[0-9]
+*.sql
+*.log
+*.mp3
+*.exe
+*.db
+*.csv
+*.xml
+*.psd
+*.[oa]
+*~

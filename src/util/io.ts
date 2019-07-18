@@ -1,4 +1,3 @@
-import {workspace} from 'coc.nvim'
 import fs from 'fs'
 import util from 'util'
 
