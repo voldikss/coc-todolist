@@ -1,68 +1,76 @@
-import GitHubApi from "@octokit/rest"
 import { workspace } from 'coc.nvim'
+import GitHubApi from '@octokit/rest'
 
-export class GitHubService {
-  public userName: string = null
-  public name: string = null
+export default class Gist {
   private github: GitHubApi = null
+  public userName: string = null
+  private isLogin = false
 
-  constructor(userToken: string) {
+  constructor(private token: string) { }
+
+  private async checkLogin(): Promise<boolean> {
+    if (this.isLogin) return true
+
     const githubApiConfig: GitHubApi.Options = {}
 
-    if (userToken !== null && userToken !== "") {
-      githubApiConfig.auth = `token ${userToken}`
+    if (this.token !== null && this.token !== '') {
+      githubApiConfig.auth = `token ${this.token}`
     }
+
     try {
       this.github = new GitHubApi(githubApiConfig)
     } catch (err) {
-      workspace.showMessage(err)
-      return
+      workspace.showMessage(err, 'error')
+      return false
     }
-    if (userToken !== null && userToken !== "") {
+    if (this.token !== null && this.token !== '') {
       this.github.users
         .getAuthenticated({})
         .then(res => {
           this.userName = res.data.login
-          this.name = res.data.name
-          workspace.showMessage(
-            "Sync : Connected with user : " + "'" + this.userName + "'"
-          )
+          workspace.showMessage(`Gist: Connected with user: ${this.userName}`)
+          this.isLogin = true
+          return true
         })
         .catch(err => {
-          workspace.showMessage(err)
-          return
+          workspace.showMessage(`Login Error: ${err}`, 'error')
+          return false
         })
     }
   }
 
   // shouldn't typeof gistObj be GistsCreateParams(will raise error)?
-  public async createGist(gistObj: any): Promise<string> {
+  public async create(gistObj: any): Promise<string> {
+    if (!this.checkLogin()) return
+
     try {
       const res = await this.github.gists.create(gistObj)
       if (res.data && res.data.id) {
         return res.data.id.toString()
       } else {
-        workspace.showMessage("ID is null")
-        workspace.showMessage("Sync : " + "Response from GitHub is: ")
-        workspace.showMessage(JSON.stringify(res))
+        workspace.showMessage('ID is null')
+        workspace.showMessage('Error : Response from GitHub is: ')
+        workspace.showMessage(JSON.stringify(res, null, 2))
         return
       }
     } catch (err) {
-      workspace.showMessage(err)
+      workspace.showMessage(err, 'error')
       return
     }
   }
 
-  public async readGist(
-    gistId: string
-  ): Promise<GitHubApi.Response<any>> {
+  public async read(gistId: string): Promise<GitHubApi.Response<any>> {
+    if (!this.checkLogin()) return
+
     const promise = this.github.gists.get({ gist_id: gistId })
     const res = await promise.catch(err => {
-      if (String(err).includes("HttpError: Not Found")) {
-        workspace.showMessage('Sync: Invalid Gist ID', 'error')
-        return
-      }
+      if (String(err).includes('HttpError: Not Found'))
+        workspace.showMessage('Error: Invalid Gist ID', 'error')
+      else
+        workspace.showMessage(`Error: ${err}`)
+      return
     })
+
     if (res) {
       return res
     }
@@ -70,12 +78,14 @@ export class GitHubService {
 
   // gistObject should be GistsUpdateParams...
   // but this will fails when pass a GistsUpdateParams
-  public async updateGist(gistObject: any): Promise<boolean> {
+  public async update(gistObject: any): Promise<boolean> {
+    if (!this.checkLogin()) return
+
     const promise = this.github.gists.update(gistObject)
 
     const res = await promise.catch(err => {
-      if (String(err).includes("HttpError: Not Found"))
-        workspace.showMessage("Sync: Invalid Gist ID", 'error')
+      if (String(err).includes('HttpError: Not Found'))
+        workspace.showMessage('Sync: Invalid Gist ID', 'error')
       else
         workspace.showMessage(err)
       return

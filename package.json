@@ -43,11 +43,6 @@
           "type": "number",
           "default": 30,
           "description": "width of reminder floating window"
-        },
-        "todolist.reminder.maxcount": {
-          "type": "number",
-          "default": 4,
-          "description": "max count of reminder floating window"
         }
       }
     },
@@ -93,5 +88,7 @@
     "webpack": "^4.35.0",
     "webpack-cli": "^3.3.5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "log4js": "^4.5.1"
+  }
 }

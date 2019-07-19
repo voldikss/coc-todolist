@@ -6,14 +6,14 @@ import {
 } from 'coc.nvim'
 import TodoList from './lists/todolist'
 import { mkdirAsync, statAsync } from './util/io'
+import Todo from './commands'
 import DB from './util/db'
-import { TodoCommand } from './commands'
-import { Alarm } from './alarm'
+import Reminder from './reminder'
 import Config from './util/config'
 
 export async function activate(context: ExtensionContext): Promise<void> {
-  const userCfg = workspace.getConfiguration('todolist')
-  const enable = userCfg.get<boolean>('enable', true)
+  const config = workspace.getConfiguration('todolist')
+  const enable = config.get<boolean>('enable', true)
   if (!enable)
     return
 
@@ -25,11 +25,11 @@ export async function activate(context: ExtensionContext): Promise<void> {
     await mkdirAsync(storagePath)
   }
 
-  const maxsize = userCfg.get<number>('maxsize', 5000)
+  const maxsize = config.get<number>('maxsize', 5000)
 
-  const AlarmDB = new DB(storagePath, 'alarm', maxsize)
-  const alarm = new Alarm(AlarmDB)
-  await alarm.monitor(userCfg.get<string>('alarm', 'floating'))
+  const RemindDB = new DB(storagePath, 'remind', maxsize)
+  const reminder = new Reminder(nvim, RemindDB, config)
+  await reminder.monitor(config.get<string>('remind', 'floating'))
 
   const db = new DB(storagePath, 'todolist', maxsize)
   const extCfg = new Config(storagePath)
@@ -40,9 +40,9 @@ export async function activate(context: ExtensionContext): Promise<void> {
   // workspace.showMessage(userToken)
   /////////////////
 
-  const todo = new TodoCommand(alarm, extCfg)
+  const todo = new Todo(reminder, extCfg)
 
-  const autoUpload = userCfg.get<boolean>('autoUpload', false)
+  const autoUpload = config.get<boolean>('autoUpload', false)
   if (autoUpload) {
     const now = new Date()
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -53,15 +53,8 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   subscriptions.push(
     commands.registerCommand(
-      'todolist.new',
-      async () => await todo.new(db)
-    )
-  )
-
-  subscriptions.push(
-    commands.registerCommand(
-      'todolist.update',
-      async () => await todo.update(db)
+      'todolist.create',
+      async () => await todo.create(db)
     )
   )
 
@@ -84,14 +77,6 @@ export async function activate(context: ExtensionContext): Promise<void> {
       'todolist.export',
       async () => await todo.export(db)
     )
-  )
-
-  subscriptions.push(
-    workspace.registerAutocmd({
-      event: ['BufLeave'], // FIXME: wont work for :qa
-      request: true,
-      callback: async () => await todo.update(db)
-    })
   )
 
   subscriptions.push(

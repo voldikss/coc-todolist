@@ -1,7 +1,7 @@
+import { workspace } from 'coc.nvim'
+import { readFile, statAsync, writeFile } from './io'
 import fs from 'fs'
 import path from 'path'
-import { readFile, statAsync, writeFile } from './io'
-import { workspace } from 'coc.nvim'
 
 export default class Config {
   private file: string

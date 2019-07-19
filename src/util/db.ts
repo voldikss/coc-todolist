@@ -6,7 +6,11 @@ import uuid = require('uuid')
 export default class DB {
   private file: string
 
-  constructor(directory: string, name: string, private maxsize: number) {
+  constructor(
+    directory: string,
+    name: string,
+    private maxsize: number
+  ) {
     this.file = path.join(directory, `${name}.json`)
   }
 

@@ -1,21 +1,20 @@
-import { workspace, Window } from 'coc.nvim'
-import Highlighter from 'coc.nvim/lib/model/highligher'
+import { workspace, WorkspaceConfiguration } from 'coc.nvim'
 import { TodoItem, Notification } from './types'
-import DB from './util/db'
 import { FloatOptions } from '@chemzqm/neovim/lib/api/types'
-import FloatWin from './float'
+import Highlighter from 'coc.nvim/lib/model/highligher'
+import DB from './util/db'
+import FloatWindow from './floatWindow'
 
-export class Alarm {
-  private db: DB
+export default class Reminder {
   public alertType: string = null
   public interval: NodeJS.Timeout
-  public floating: FloatWin
-  constructor(db: DB) {
-    this.db = db
-    this.floating = new FloatWin(2) // TODO
+  public floating: FloatWindow
+
+  constructor(private nvim, private db: DB, config: WorkspaceConfiguration) {
+    this.floating = new FloatWindow(nvim, config)
   }
 
-  public async new(todo: TodoItem): Promise<void> {
+  public async create(todo: TodoItem): Promise<void> {
     await this.db.add(todo)
   }
 
@@ -26,10 +25,10 @@ export class Alarm {
   public async monitor(alertType: string): Promise<void> {
     this.alertType = alertType
     ////////////////// test
-    const alarm = await this.db.load()
-    if (!alarm || alarm.length === 0)
+    const remind = await this.db.load()
+    if (!remind || remind.length === 0)
       return
-    const todo = alarm[0].content
+    const todo = remind[0].content
     // await this.notify(todo)
     await this.notify(todo)
     await this.notify(todo)
@@ -37,12 +36,12 @@ export class Alarm {
     return
     ////////////////// test
     this.interval = setInterval(async () => {
-      const alarm = await this.db.load()
-      if (!alarm || alarm.length === 0)
+      const remind = await this.db.load()
+      if (!remind || remind.length === 0)
         return
 
       const now = new Date().getTime()
-      for (const a of alarm) {
+      for (const a of remind) {
         const due = a.content.due
         if (Date.parse(due) <= now) {
           await this.notify(a.content)
@@ -57,12 +56,9 @@ export class Alarm {
   }
 
   public async bubble(notification: Notification): Promise<void> {
-    const { nvim } = workspace
-    const buf = await nvim.createNewBuffer()
+    const buf = await this.nvim.createNewBuffer()
     buf.setOption('bufhidden', 'wipe', true)
     buf.setOption('buftype', 'nowrite', true)
-    let height = await nvim.eval('winheight(0)')
-    let width = await nvim.getOption('columns')
 
     const hl = new Highlighter()
     const margin = ' '.repeat(Math.floor((30 - notification.title.length) / 2))
@@ -72,20 +68,11 @@ export class Alarm {
       hl.addText(': ')
       hl.addText(detail, 'String')
     }
+
+    // buf was also updated
     hl.render(buf)
 
-    const floatWidth = 30 // TODO
-    const winConfig: FloatOptions = {
-      focusable: false,
-      relative: 'editor',
-      anchor: 'NW',
-      height: Object.keys(notification.content).length + 1,
-      width: floatWidth,
-      row: Number(height.toString()) - Object.keys(notification.content).length,
-      col: Number(width.toString()) - floatWidth,
-    }
-
-    await this.floating.new(buf, winConfig)
+    await this.floating.create(buf)
   }
 
   public async notify(todo: TodoItem): Promise<void> {

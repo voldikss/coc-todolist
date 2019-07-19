@@ -1,19 +1,16 @@
 import { workspace } from 'coc.nvim'
-import path from 'path'
-import { GitHubService } from './gist'
 import { TodoItem, TodoStatus } from './types'
-import DB from './util/db'
 import { statAsync } from './util/io'
-import { Alarm } from './alarm'
+import Gist from './gist'
+import path from 'path'
+import DB from './util/db'
+import Reminder from './reminder'
 import Config from './util/config'
 
-export class TodoCommand {
-  constructor(private alarm: Alarm, private extCfg: Config) {
-    this.alarm = alarm
-    this.extCfg = extCfg
-  }
+export default class Todo {
+  constructor(private reminder: Reminder, private extCfg: Config) { }
 
-  private async getUserToken(): Promise<string> {
+  private async getToken(): Promise<string> {
     let token = await this.extCfg.fetch('userToken')
     if (!token) {
       token = await workspace.requestInput('Input github token')
@@ -25,13 +22,13 @@ export class TodoCommand {
     return token
   }
 
-  public async new(db: DB): Promise<void> {
+  public async create(db: DB): Promise<void> {
     let desc: string
     let date: string
     let status: TodoStatus
     let due: string | null
 
-    desc = await workspace.requestInput('Describe todo content')
+    desc = await workspace.requestInput('Describe what to do')
     if (!desc || desc.trim() === '')
       return
 
@@ -40,7 +37,7 @@ export class TodoCommand {
     date = new Date().toString()
     status = 'active'
 
-    due = await workspace.requestInput('Enter remind time(default)', date)
+    due = await workspace.requestInput('Enter remind time', date)
     if (due && due.trim() !== '')
       due = new Date(Date.parse(due.trim())).toString()
 
@@ -48,43 +45,15 @@ export class TodoCommand {
     await db.add(todo)
 
     if (due !== date)
-      await this.alarm.new(todo)
+      await this.reminder.create(todo)
 
-    workspace.showMessage("new todo added")
-  }
-
-  public async  update(db: DB): Promise<void> {
-    const doc = await workspace.document
-    const filetype = await doc.buffer.getOption('filetype')
-    if (!(filetype && filetype === 'todo'))
-      return
-
-    let text: string
-    if (doc && doc.textDocument) {
-      text = doc.textDocument.getText()
-      if (!text)
-        return
-    }
-
-    // TODO: check invalid
-    const todo = {} as TodoItem
-    const lines = text.trim().split('\n')
-    for (const i of Object.keys(lines)) {
-      let line = lines[i]
-      let [key, value] = line.split(':')
-      todo[key.trim()] = value.trim()
-    }
-
-    // TODO
-    await db.add(todo)
-
-    workspace.showMessage("todo updated")
+    workspace.showMessage('New todo added')
   }
 
   public async download(directory: string, db: DB): Promise<void> {
-    const token = await this.getUserToken()
+    const token = await this.getToken()
 
-    let github = new GitHubService(token)
+    let github = new Gist(token)
     // if gist id exists, use that to download gist
     let gistId = await this.extCfg.fetch('gist-id')
     if (!gistId || gistId.trim() === '') {
@@ -93,7 +62,7 @@ export class TodoCommand {
         return
       gistId = gistId.trim()
     }
-    const gist = await github.readGist(gistId)
+    const gist = await github.read(gistId)
 
     const todoPath = path.join(directory, 'todo.json')
     const todoPathOld = path.join(directory, 'todo.json.old')
@@ -112,11 +81,9 @@ export class TodoCommand {
 
   public async upload(db: DB): Promise<void> {
     let uploaded = 0
-    // TODO: this.login()
-    const token = await this.getUserToken()
+    const token = await this.getToken()
 
-    // d280ab7a208cc0cc4c55a1935ce59dc4ec9de1ca
-    let github = new GitHubService(token)
+    let github = new Gist(token)
 
     const todo = await db.load()
     const gist = todo.map(t => t.content)
@@ -131,13 +98,13 @@ export class TodoCommand {
           }
         }
       }
-      const status = await github.updateGist(gistObj)
+      const status = await github.update(gistObj)
       if (status) {
         uploaded = 1
-        workspace.showMessage('todo gist updated')
+        workspace.showMessage('Todo gist updated')
       }
       else
-        workspace.showMessage('failed to update todo gist')
+        workspace.showMessage('Failed to update todo gist')
     } else {
       let gistObj = {
         description: "coc-todolist",
@@ -147,14 +114,14 @@ export class TodoCommand {
           }
         }
       }
-      const gistId = await github.createGist(gistObj)
+      const gistId = await github.create(gistObj)
       if (gistId) {
         await this.extCfg.push('gist-id', gistId)
         uploaded = 1
-        workspace.showMessage('todo gist created')
+        workspace.showMessage('Todo gist created')
       }
       else {
-        workspace.showMessage('failed to create todo gist')
+        workspace.showMessage('Failed to create todo gist')
       }
     }
 
