@@ -4,7 +4,6 @@ import {
   ListItem,
   BasicList,
   Neovim,
-  workspace,
 } from 'coc.nvim'
 import DB from '../util/db'
 import { TodoItem } from '../types'

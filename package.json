@@ -24,15 +24,30 @@
     "configuration": {
       "type": "object",
       "properties": {
-        "todo.filetype": {
-          "type": "string",
-          "default": "todo",
-          "description": "filetype to write todo content"
-        },
-        "todo.autoSync": {
+        "todolist.autoSync": {
           "type": "boolean",
           "default": true,
           "description": "sync your todo every day when coc was started"
+        },
+        "todolist.reminder.background": {
+          "type": "string",
+          "default": "",
+          "description": "notification background"
+        },
+        "todolist.reminder.winblend": {
+          "type": "number",
+          "default": 100,
+          "description": "opacity of reminder floating window"
+        },
+        "todolist.reminder.width": {
+          "type": "number",
+          "default": 30,
+          "description": "width of reminder floating window"
+        },
+        "todolist.reminder.maxcount": {
+          "type": "number",
+          "default": 4,
+          "description": "max count of reminder floating window"
         }
       }
     },
@@ -68,7 +83,7 @@
     "@types/js-yaml": "^3.12.1",
     "@types/node": "^12.0.10",
     "@types/uuid": "^3.4.4",
-    "coc.nvim": "^0.0.71",
+    "coc.nvim": "^0.0.73",
     "js-yaml": "^3.13.1",
     "rimraf": "^2.6.3",
     "ts-loader": "^6.0.4",

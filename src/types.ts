@@ -13,3 +13,8 @@ export interface TodoItemDB {
   content: TodoItem
   path: string
 }
+
+export interface Notification {
+  title: string
+  content: object
+}

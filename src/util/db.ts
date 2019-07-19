@@ -23,11 +23,6 @@ export default class DB {
       items.pop()
     }
 
-    // check duplication
-    // let arr = items.map(item => item['content'][0])
-    // if (arr.indexOf(content[0]) >= 0) return
-
-    // TODO: improve
     items.unshift({ id: uuid(), content: todo, path: this.file })
 
     await writeFile(this.file, JSON.stringify(items, null, 2))

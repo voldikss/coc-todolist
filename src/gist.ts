@@ -74,10 +74,11 @@ export class GitHubService {
     const promise = this.github.gists.update(gistObject)
 
     const res = await promise.catch(err => {
-      if (String(err).includes("HttpError: Not Found")) {
+      if (String(err).includes("HttpError: Not Found"))
         workspace.showMessage("Sync: Invalid Gist ID", 'error')
-        return
-      }
+      else
+        workspace.showMessage(err)
+      return
     })
 
     if (res) {

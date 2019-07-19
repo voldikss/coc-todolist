@@ -9,10 +9,11 @@ import { mkdirAsync, statAsync } from './util/io'
 import DB from './util/db'
 import { TodoCommand } from './commands'
 import { Alarm } from './alarm'
+import Config from './util/config'
 
 export async function activate(context: ExtensionContext): Promise<void> {
-  const config = workspace.getConfiguration('todolist')
-  const enable = config.get<boolean>('enable', true)
+  const userCfg = workspace.getConfiguration('todolist')
+  const enable = userCfg.get<boolean>('enable', true)
   if (!enable)
     return
 
@@ -24,14 +25,31 @@ export async function activate(context: ExtensionContext): Promise<void> {
     await mkdirAsync(storagePath)
   }
 
-  const maxsize = config.get<number>('maxsize', 5000)
+  const maxsize = userCfg.get<number>('maxsize', 5000)
 
   const AlarmDB = new DB(storagePath, 'alarm', maxsize)
   const alarm = new Alarm(AlarmDB)
-  alarm.monitor(config.get<string>('alarm', 'floating'))
+  await alarm.monitor(userCfg.get<string>('alarm', 'floating'))
 
   const db = new DB(storagePath, 'todolist', maxsize)
-  const todo = new TodoCommand(alarm)
+  const extCfg = new Config(storagePath)
+  /// test///////////
+  // await extCfg.push('gist-id', 'ddd')
+  // await extCfg.push('userToken', 'token')
+  // const userToken = await extCfg.fetch('userToken')
+  // workspace.showMessage(userToken)
+  /////////////////
+
+  const todo = new TodoCommand(alarm, extCfg)
+
+  const autoUpload = userCfg.get<boolean>('autoUpload', false)
+  if (autoUpload) {
+    const now = new Date()
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const last = extCfg.fetch('lastUpload')
+    if (last && Number(last) > day.getTime())
+      await todo.upload(db)
+  }
 
   subscriptions.push(
     commands.registerCommand(
@@ -50,7 +68,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   subscriptions.push(
     commands.registerCommand(
       'todolist.upload',
-      async () => await todo.upload(storagePath, db)
+      async () => await todo.upload(db)
     )
   )
 

@@ -3,46 +3,24 @@ import path from 'path'
 import { GitHubService } from './gist'
 import { TodoItem, TodoStatus } from './types'
 import DB from './util/db'
-import { statAsync, readFile, writeFile } from './util/io'
+import { statAsync } from './util/io'
 import { Alarm } from './alarm'
+import Config from './util/config'
 
 export class TodoCommand {
-  constructor(private alarm: Alarm) {
+  constructor(private alarm: Alarm, private extCfg: Config) {
     this.alarm = alarm
+    this.extCfg = extCfg
   }
 
-  private async getGistId(directory: string): Promise<string> {
-    let gistId = ''
-    const gist_id_file = path.join(directory, 'gist-id.json')
-    let stat = await statAsync(gist_id_file)
-    if (stat && stat.isFile()) {
-      let gist_id_text = await readFile(gist_id_file)
-      let gist_id_json = JSON.parse(gist_id_text)
-      gistId = gist_id_json['gist_id']
-    }
-    return gistId
-  }
-
-  // TODO: get set method?
-  private async saveGistId(directory: string, gistId: string): Promise<void> {
-    const gist_id_file = path.join(directory, 'gist-id.json')
-    await writeFile(gist_id_file, JSON.stringify({ gistId }))
-  }
-
-  private async getUserToken(directory: string): Promise<string> {
-    let token: string
-    const token_file = path.join(directory, 'token.json')
-    let token_stat = await statAsync(token_file)
-    if (token_stat && token_stat.isFile()) {
-      let token_text = await readFile(token_file)
-      let token_json = JSON.parse(token_text)
-      token = token_json['token']
-    } else {
+  private async getUserToken(): Promise<string> {
+    let token = await this.extCfg.fetch('userToken')
+    if (!token) {
       token = await workspace.requestInput('Input github token')
       if (!token || token.trim() === '')
         return
       token = token.trim()
-      await writeFile(token_file, JSON.stringify({ token }))
+      await this.extCfg.push('userToken', token)
     }
     return token
   }
@@ -104,11 +82,11 @@ export class TodoCommand {
   }
 
   public async download(directory: string, db: DB): Promise<void> {
-    const token = await this.getUserToken(directory)
+    const token = await this.getUserToken()
 
     let github = new GitHubService(token)
     // if gist id exists, use that to download gist
-    let gistId = await this.getGistId(directory)
+    let gistId = await this.extCfg.fetch('gist-id')
     if (!gistId || gistId.trim() === '') {
       gistId = await workspace.requestInput('Input gist id')
       if (!gistId || gistId.trim() === '')
@@ -132,9 +110,10 @@ export class TodoCommand {
     }
   }
 
-  public async upload(directory: string, db: DB): Promise<void> {
+  public async upload(db: DB): Promise<void> {
+    let uploaded = 0
     // TODO: this.login()
-    const token = await this.getUserToken(directory)
+    const token = await this.getUserToken()
 
     // d280ab7a208cc0cc4c55a1935ce59dc4ec9de1ca
     let github = new GitHubService(token)
@@ -142,10 +121,10 @@ export class TodoCommand {
     const todo = await db.load()
     const gist = todo.map(t => t.content)
 
-    const gistId = await this.getGistId(directory)
+    const gistId = await this.extCfg.fetch('gist-id')
     if (gistId && gistId.trim() !== '') {
       let gistObj = {
-        gistId,
+        gist_id: gistId,
         files: {
           'todolist.json': {
             content: JSON.stringify(gist, null, 2)
@@ -153,8 +132,10 @@ export class TodoCommand {
         }
       }
       const status = await github.updateGist(gistObj)
-      if (status)
+      if (status) {
+        uploaded = 1
         workspace.showMessage('todo gist updated')
+      }
       else
         workspace.showMessage('failed to update todo gist')
     } else {
@@ -168,12 +149,19 @@ export class TodoCommand {
       }
       const gistId = await github.createGist(gistObj)
       if (gistId) {
-        await this.saveGistId(directory, gistId)
+        await this.extCfg.push('gist-id', gistId)
+        uploaded = 1
         workspace.showMessage('todo gist created')
       }
       else {
         workspace.showMessage('failed to create todo gist')
       }
+    }
+
+    if (uploaded) {
+      const now = new Date()
+      const day = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      await this.extCfg.push('lastUpload', day.getTime())
     }
   }
 
