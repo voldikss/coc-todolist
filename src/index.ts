@@ -28,8 +28,8 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const maxsize = config.get<number>('maxsize', 5000)
 
   const RemindDB = new DB(storagePath, 'remind', maxsize)
-  const reminder = new Reminder(nvim, RemindDB, config)
-  await reminder.monitor(config.get<string>('remind', 'floating'))
+  const reminder = new Reminder(nvim, RemindDB)
+  await reminder.monitor()
 
   const db = new DB(storagePath, 'todolist', maxsize)
   const extCfg = new Config(storagePath)

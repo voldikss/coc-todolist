@@ -37,7 +37,7 @@ export default class Todo {
     date = new Date().toString()
     status = 'active'
 
-    due = await workspace.requestInput('Enter remind time', date)
+    due = await workspace.requestInput('When to remind you', date)
     if (due && due.trim() !== '')
       due = new Date(Date.parse(due.trim())).toString()
 

@@ -43,6 +43,11 @@
           "type": "number",
           "default": 30,
           "description": "width of reminder floating window"
+        },
+        "todolist.reminder.alertType": {
+          "type": "number",
+          "default": "floating",
+          "description": "width of reminder floating window"
         }
       }
     },

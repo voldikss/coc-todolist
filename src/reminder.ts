@@ -6,12 +6,19 @@ import DB from './util/db'
 import FloatWindow from './floatWindow'
 
 export default class Reminder {
-  public alertType: string = null
   public interval: NodeJS.Timeout
-  public floating: FloatWindow
+  private floating: FloatWindow
+  private config: WorkspaceConfiguration
 
-  constructor(private nvim, private db: DB, config: WorkspaceConfiguration) {
-    this.floating = new FloatWindow(nvim, config)
+  constructor(private nvim, private db: DB) {
+    this.config = workspace.getConfiguration('todolist.reminder')
+    workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('todolist.reminder')) {
+        this.config = workspace.getConfiguration('todolist.reminder')
+      }
+    })
+
+    this.floating = new FloatWindow(nvim, this.config)
   }
 
   public async create(todo: TodoItem): Promise<void> {
@@ -22,14 +29,13 @@ export default class Reminder {
     await this.db.delete(uid)
   }
 
-  public async monitor(alertType: string): Promise<void> {
-    this.alertType = alertType
+  public async monitor(): Promise<void> {
     ////////////////// test
     const remind = await this.db.load()
     if (!remind || remind.length === 0)
       return
     const todo = remind[0].content
-    // await this.notify(todo)
+    await this.notify(todo)
     await this.notify(todo)
     await this.notify(todo)
     await this.notify(todo)
@@ -61,7 +67,7 @@ export default class Reminder {
     buf.setOption('buftype', 'nowrite', true)
 
     const hl = new Highlighter()
-    const margin = ' '.repeat(Math.floor((30 - notification.title.length) / 2))
+    const margin = ' '.repeat(Math.floor((30 - notification.title.length) / 2)) // TODO
     hl.addLine(`${margin}${notification.title}`, 'Title')
     for (const [item, detail] of Object.entries(notification.content)) {
       hl.addLine(item, 'Keyword')
@@ -85,7 +91,8 @@ export default class Reminder {
       }
     }
 
-    if (this.alertType === 'floating') {
+    const alertType = this.config.get<string>('alertType', 'floating')
+    if (alertType === 'floating') {
       try {
         await this.bubble(notification)
         return
