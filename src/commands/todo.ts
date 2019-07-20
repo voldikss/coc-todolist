@@ -52,7 +52,7 @@ export default class Todo {
       if (!gistId || gistId.trim() === '')
         return
       gistId = gistId.trim()
-      this.extCfg.push('gistId', gistId)
+      await this.extCfg.push('gistId', gistId)
     }
     const gist = await this.github.read(gistId)
 

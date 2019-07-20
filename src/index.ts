@@ -17,6 +17,10 @@ export async function activate(context: ExtensionContext): Promise<void> {
   if (!enable)
     return
 
+  const maxsize = config.get<number>('maxsize', 5000)
+  const monitor = config.get<boolean>('monitor', false)
+  const autoUpload = config.get<boolean>('autoUpload', false)
+
   const { subscriptions, storagePath } = context
   const { nvim } = workspace
 
@@ -24,10 +28,6 @@ export async function activate(context: ExtensionContext): Promise<void> {
   if (!stat || !stat.isDirectory()) {
     await mkdirAsync(storagePath)
   }
-
-  const maxsize = config.get<number>('maxsize', 5000)
-  const monitor = config.get<boolean>('monitor', false)
-  const autoUpload = config.get<boolean>('autoUpload', false)
 
   const remindList = new DB(storagePath, 'remind', maxsize)
   const reminder = new Reminder(nvim, remindList)

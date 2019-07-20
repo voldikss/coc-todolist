@@ -44,9 +44,9 @@ export default class GitHubService {
             workspace.showMessage(`Gist: Connected with: ${username}`)
             resolve(true)
           })
-          .catch(_err => {
+          .catch(async _err => {
             workspace.showMessage(`Login Error: ${_err}`, 'error')
-            this.extCfg.delete('userToken')
+            await this.extCfg.delete('userToken')
             resolve(false)
           })
       })
@@ -82,10 +82,10 @@ export default class GitHubService {
 
   public async read(gistId: string): Promise<GitHubApi.Response<any>> {
     const promise = this.github.gists.get({ gist_id: gistId })
-    const res = await promise.catch(err => {
+    const res = await promise.catch(async err => {
       if (String(err).includes('HttpError: Not Found')) {
         workspace.showMessage('Error: Invalid Gist ID', 'error')
-        this.extCfg.delete('gistId')
+        await this.extCfg.delete('gistId')
       }
       else
         workspace.showMessage(`Error: ${err}`)
@@ -102,10 +102,10 @@ export default class GitHubService {
   public async update(gistObject: any): Promise<boolean> {
     const promise = this.github.gists.update(gistObject)
 
-    const res = await promise.catch(err => {
+    const res = await promise.catch(async err => {
       if (String(err).includes('HttpError: Not Found')) {
         workspace.showMessage('Sync: Invalid Gist ID', 'error')
-        this.extCfg.delete('gistId')
+        await this.extCfg.delete('gistId')
       }
       else
         workspace.showMessage(err)
