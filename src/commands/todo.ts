@@ -42,7 +42,9 @@ export default class Todo {
   }
 
   public async download(directory: string, db: DB): Promise<void> {
-    await this.github.init()
+    const init = await this.github.init()
+    if (!init) return
+
     // if gist id exists, use that to download gist
     let gistId = await this.extCfg.fetch('gistId')
     if (!gistId || gistId.trim() === '') {
@@ -50,6 +52,7 @@ export default class Todo {
       if (!gistId || gistId.trim() === '')
         return
       gistId = gistId.trim()
+      this.extCfg.push('gistId', gistId)
     }
     const gist = await this.github.read(gistId)
 
@@ -63,7 +66,7 @@ export default class Todo {
 
     const content = gist.data.files['todolist.json']['content']
     if (content) {
-      // await db.cover('[]')
+      await db.cover('[]')
       const todo: TodoItem[] = JSON.parse(content)
       for (const t of todo) {
         await db.add(t)
@@ -74,7 +77,8 @@ export default class Todo {
 
   public async upload(db: DB): Promise<void> {
     let uploaded = 0
-    await this.github.init()
+    const init = await this.github.init()
+    if (!init) return
 
     const todo = await db.load()
     const gist = todo.map(t => t.content)

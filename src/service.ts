@@ -4,7 +4,6 @@ import Config from './util/config'
 
 export default class GitHubService {
   private github: GitHubApi = null
-  private userName: string = null
   private isLogin = false
 
   constructor(private extCfg: Config) {
@@ -38,25 +37,29 @@ export default class GitHubService {
       return false
     }
     if (token !== null && token !== '') {
-      this.github.users
-        .getAuthenticated({})
-        .then(res => {
-          this.userName = res.data.login
-          workspace.showMessage(`Gist: Connected with: ${this.userName}`)
-          this.isLogin = true
-          return true
-        })
-        .catch(err => {
-          workspace.showMessage(`Login Error: ${err}`, 'error')
-          this.extCfg.delete('userToken')
-          return false
-        })
+      return new Promise(resolve => {
+        this.github.users.getAuthenticated({})
+          .then(_res => {
+            const username = _res.data.login
+            workspace.showMessage(`Gist: Connected with: ${username}`)
+            resolve(true)
+          })
+          .catch(_err => {
+            workspace.showMessage(`Login Error: ${_err}`, 'error')
+            this.extCfg.delete('userToken')
+            resolve(false)
+          })
+      })
     }
   }
 
-  public async init(): Promise<void> {
+  public async init(): Promise<boolean> {
     const token = await this.getToken()
-    await this.login(token)
+    if (!token)
+      return false
+
+    const status = await this.login(token)
+    return status
   }
 
   // shouldn't typeof gistObj be GistsCreateParams(will raise error)?
