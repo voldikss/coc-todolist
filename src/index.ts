@@ -6,9 +6,9 @@ import {
 } from 'coc.nvim'
 import TodoList from './lists/todolist'
 import { mkdirAsync, statAsync } from './util/io'
-import Todo from './commands'
+import Todo from './commands/todo'
 import DB from './util/db'
-import Reminder from './reminder'
+import Reminder from './commands/reminder'
 import Config from './util/config'
 
 export async function activate(context: ExtensionContext): Promise<void> {
@@ -26,29 +26,25 @@ export async function activate(context: ExtensionContext): Promise<void> {
   }
 
   const maxsize = config.get<number>('maxsize', 5000)
+  const monitor = config.get<boolean>('monitor', false)
+  const autoUpload = config.get<boolean>('autoUpload', false)
 
-  const RemindDB = new DB(storagePath, 'remind', maxsize)
-  const reminder = new Reminder(nvim, RemindDB)
-  await reminder.monitor()
+  const remindList = new DB(storagePath, 'remind', maxsize)
+  const reminder = new Reminder(nvim, remindList)
 
   const db = new DB(storagePath, 'todolist', maxsize)
   const extCfg = new Config(storagePath)
-  /// test///////////
-  // await extCfg.push('gist-id', 'ddd')
-  // await extCfg.push('userToken', 'token')
-  // const userToken = await extCfg.fetch('userToken')
-  // workspace.showMessage(userToken)
-  /////////////////
-
   const todo = new Todo(reminder, extCfg)
 
-  const autoUpload = config.get<boolean>('autoUpload', false)
+  if (monitor) await reminder.monitor()
   if (autoUpload) {
     const now = new Date()
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const last = extCfg.fetch('lastUpload')
-    if (last && Number(last) > day.getTime())
+    const last = await extCfg.fetch('lastUpload')
+    if (last && Number(last) < day.getTime()) {
+      workspace.showMessage('uploading')
       await todo.upload(db)
+    }
   }
 
   subscriptions.push(
@@ -76,6 +72,13 @@ export async function activate(context: ExtensionContext): Promise<void> {
     commands.registerCommand(
       'todolist.export',
       async () => await todo.export(db)
+    )
+  )
+
+  subscriptions.push(
+    commands.registerCommand(
+      'todolist.clearRemind',
+      async () => await reminder.clearNotice()
     )
   )
 

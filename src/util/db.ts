@@ -49,4 +49,8 @@ export default class DB {
       await writeFile(this.file, JSON.stringify(items, null, 2))
     }
   }
+
+  public async cover(content: string): Promise<void> {
+    await writeFile(this.file, content)
+  }
 }

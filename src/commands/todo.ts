@@ -1,25 +1,16 @@
 import { workspace } from 'coc.nvim'
-import { TodoItem, TodoStatus } from './types'
-import { statAsync } from './util/io'
-import Gist from './gist'
+import { TodoItem, TodoStatus } from '../types'
+import { statAsync } from '../util/io'
+import GitHubService from '../service'
 import path from 'path'
-import DB from './util/db'
+import DB from '../util/db'
 import Reminder from './reminder'
-import Config from './util/config'
+import Config from '../util/config'
 
 export default class Todo {
-  constructor(private reminder: Reminder, private extCfg: Config) { }
-
-  private async getToken(): Promise<string> {
-    let token = await this.extCfg.fetch('userToken')
-    if (!token) {
-      token = await workspace.requestInput('Input github token')
-      if (!token || token.trim() === '')
-        return
-      token = token.trim()
-      await this.extCfg.push('userToken', token)
-    }
-    return token
+  private github: GitHubService
+  constructor(private reminder: Reminder, private extCfg: Config) {
+    this.github = new GitHubService(this.extCfg)
   }
 
   public async create(db: DB): Promise<void> {
@@ -51,21 +42,19 @@ export default class Todo {
   }
 
   public async download(directory: string, db: DB): Promise<void> {
-    const token = await this.getToken()
-
-    let github = new Gist(token)
+    await this.github.init()
     // if gist id exists, use that to download gist
-    let gistId = await this.extCfg.fetch('gist-id')
+    let gistId = await this.extCfg.fetch('gistId')
     if (!gistId || gistId.trim() === '') {
       gistId = await workspace.requestInput('Input gist id')
       if (!gistId || gistId.trim() === '')
         return
       gistId = gistId.trim()
     }
-    const gist = await github.read(gistId)
+    const gist = await this.github.read(gistId)
 
-    const todoPath = path.join(directory, 'todo.json')
-    const todoPathOld = path.join(directory, 'todo.json.old')
+    const todoPath = path.join(directory, 'todolist.json')
+    const todoPathOld = path.join(directory, 'todolist.json.old')
     const todoStat = await statAsync(todoPath)
 
     if (todoStat && todoStat.isFile()) {
@@ -74,21 +63,23 @@ export default class Todo {
 
     const content = gist.data.files['todolist.json']['content']
     if (content) {
+      // await db.cover('[]')
       const todo: TodoItem[] = JSON.parse(content)
-      todo.map(async t => await db.add(t))
+      for (const t of todo) {
+        await db.add(t)
+      }
+      workspace.showMessage('Downloaded todolist from gist')
     }
   }
 
   public async upload(db: DB): Promise<void> {
     let uploaded = 0
-    const token = await this.getToken()
-
-    let github = new Gist(token)
+    await this.github.init()
 
     const todo = await db.load()
     const gist = todo.map(t => t.content)
 
-    const gistId = await this.extCfg.fetch('gist-id')
+    const gistId = await this.extCfg.fetch('gistId')
     if (gistId && gistId.trim() !== '') {
       let gistObj = {
         gist_id: gistId,
@@ -98,13 +89,13 @@ export default class Todo {
           }
         }
       }
-      const status = await github.update(gistObj)
+      const status = await this.github.update(gistObj)
       if (status) {
         uploaded = 1
-        workspace.showMessage('Todo gist updated')
+        workspace.showMessage('Uploaded todolist to gist')
       }
       else
-        workspace.showMessage('Failed to update todo gist')
+        workspace.showMessage('Failed to uploaded todo gist')
     } else {
       let gistObj = {
         description: "coc-todolist",
@@ -114,9 +105,9 @@ export default class Todo {
           }
         }
       }
-      const gistId = await github.create(gistObj)
+      const gistId = await this.github.create(gistObj)
       if (gistId) {
-        await this.extCfg.push('gist-id', gistId)
+        await this.extCfg.push('gistId', gistId)
         uploaded = 1
         workspace.showMessage('Todo gist created')
       }

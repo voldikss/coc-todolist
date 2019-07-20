@@ -24,10 +24,20 @@
     "configuration": {
       "type": "object",
       "properties": {
-        "todolist.autoSync": {
+        "todolist.maxsize": {
+          "type": "number",
+          "default": 5000,
+          "description": "maxsize of todolist"
+        },
+        "todolist.autoUpload": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "sync your todo every day when coc was started"
+        },
+        "todolist.monitor": {
+          "type": "boolean",
+          "default": false,
+          "description": "whether to monitor the ddl and reminder you at the time"
         },
         "todolist.reminder.background": {
           "type": "string",
@@ -44,10 +54,16 @@
           "default": 30,
           "description": "width of reminder floating window"
         },
-        "todolist.reminder.alertType": {
-          "type": "number",
+        "todolist.reminder.notify": {
+          "type": "string",
           "default": "floating",
-          "description": "width of reminder floating window"
+          "description": "width of reminder floating window",
+          "enum": [
+            "floating",
+            "virtual",
+            "echo",
+            "none"
+          ]
         }
       }
     },
