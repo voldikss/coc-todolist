@@ -4,9 +4,12 @@ import {
   ListItem,
   BasicList,
   Neovim,
+  workspace,
 } from 'coc.nvim'
 import DB from '../util/db'
 import { TodoItem } from '../types'
+
+// TODO: delete not work because of rewrite
 
 export default class TodoList extends BasicList {
   public readonly name = 'todo'
@@ -57,31 +60,41 @@ export default class TodoList extends BasicList {
   private compare(a: TodoItem, b: TodoItem): number {
     const priority = new Map<string, number>()
     priority.set('active', 1)
-    priority.set('completed', 2)
-    priority.set('cancelled', 3)
+    priority.set('outdated', 2)
+    priority.set('completed', 3)
+    priority.set('cancelled', 4)
 
     return priority.get(a.status) - priority.get(b.status)
   }
 
   public async loadItems(_context: ListContext): Promise<ListItem[]> {
-    let arr = await this.db.load()
+    const arr = await this.db.load()
     let res: ListItem[] = []
-    for (let item of arr) {
-      let content = item.content.desc
+    for (const [idx, item] of arr.entries()) {
+      const content = item.content.desc
       let status = item.content.status
-      let icon = {
+      const due = item.content.due
+      if (due && Date.parse(due) < Number(new Date().getTime())) {
+        workspace.showMessage('outdated')
+        arr[idx].content.status = 'outdated'
+        status = 'outdated'
+      }
+      const icon = {
         active: '🕐',
         completed: '✔️ ',
-        cancelled: '🚫'
+        cancelled: '🚫',
+        outdated: '❌'
       }
-      let shortcut = icon[status]
-      let due = item.content.due
+      const shortcut = icon[status]
+
       res.push({
         label: `${shortcut} ${content}\t\t${due ? 'DUE: ' + due : ''}`,
         filterText: content + status,
         data: Object.assign({}, item)
       })
     }
+
+    await this.db.dump(arr)
 
     res = res.sort((a, b) => {
       return this.compare(a.data.content, b.data.content)

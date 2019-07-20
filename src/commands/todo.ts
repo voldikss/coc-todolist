@@ -9,6 +9,7 @@ import Config from '../util/config'
 
 export default class Todo {
   private github: GitHubService
+
   constructor(private reminder: Reminder, private extCfg: Config) {
     this.github = new GitHubService(this.extCfg)
   }
@@ -24,7 +25,6 @@ export default class Todo {
       return
 
     desc = desc.trim()
-    // date = await workspace.nvim.call('strftime', '%Y-%m-%d %T')
     date = new Date().toString()
     status = 'active'
 
@@ -66,11 +66,8 @@ export default class Todo {
 
     const content = gist.data.files['todolist.json']['content']
     if (content) {
-      await db.cover('[]')
-      const todo: TodoItem[] = JSON.parse(content)
-      for (const t of todo) {
-        await db.add(t)
-      }
+      const todos: TodoItem[] = JSON.parse(content)
+      await db.updateAll(todos)
       workspace.showMessage('Downloaded todolist from gist')
     }
   }

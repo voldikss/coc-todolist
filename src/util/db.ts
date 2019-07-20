@@ -21,13 +21,13 @@ export default class DB {
     return JSON.parse(content) as TodoItemDB[]
   }
 
-  public async add(todo: TodoItem): Promise<void> {
+  public async add(data: TodoItem): Promise<void> {
     let items = await this.load()
     if (items.length == this.maxsize) {
       items.pop()
     }
 
-    items.unshift({ id: uuid(), content: todo, path: this.file })
+    items.unshift({ id: uuid(), content: data, path: this.file })
 
     await writeFile(this.file, JSON.stringify(items, null, 2))
   }
@@ -41,16 +41,23 @@ export default class DB {
     }
   }
 
-  public async update(uid: string, todo: TodoItem): Promise<void> {
+  public async update(uid: string, data: TodoItem): Promise<void> {
     let items = await this.load()
     let idx = items.findIndex(o => o.id == uid)
     if (idx !== -1) {
-      items[idx].content = todo
+      items[idx].content = data
       await writeFile(this.file, JSON.stringify(items, null, 2))
     }
   }
 
-  public async cover(content: string): Promise<void> {
-    await writeFile(this.file, content)
+  public async updateAll(data: TodoItem[]): Promise<void> {
+    await writeFile(this.file, '[]')
+    for (const t of data) {
+      await this.add(t)
+    }
+  }
+
+  public async dump(data: TodoItemDB[]): Promise<void> {
+    await writeFile(this.file, JSON.stringify(data, null, 2))
   }
 }

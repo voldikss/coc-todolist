@@ -3,11 +3,10 @@ import GitHubApi from '@octokit/rest'
 import Config from './util/config'
 
 export default class GitHubService {
-  private github: GitHubApi = null
+  private github: GitHubApi
   private isLogin = false
 
-  constructor(private extCfg: Config) {
-  }
+  constructor(private extCfg: Config) { }
 
   private async getToken(): Promise<string> {
     let token = await this.extCfg.fetch('userToken')
@@ -32,15 +31,15 @@ export default class GitHubService {
 
     try {
       this.github = new GitHubApi(githubApiConfig)
-    } catch (err) {
-      workspace.showMessage(err, 'error')
+    } catch (_err) {
+      workspace.showMessage(_err, 'error')
       return false
     }
     if (token !== null && token !== '') {
       return new Promise(resolve => {
         this.github.users.getAuthenticated({})
-          .then(_res => {
-            const username = _res.data.login
+          .then(_err => {
+            const username = _err.data.login
             workspace.showMessage(`Gist: Connected with: ${username}`)
             resolve(true)
           })
@@ -74,21 +73,21 @@ export default class GitHubService {
         workspace.showMessage(JSON.stringify(res, null, 2))
         return
       }
-    } catch (err) {
-      workspace.showMessage(err, 'error')
+    } catch (_err) {
+      workspace.showMessage(_err, 'error')
       return
     }
   }
 
   public async read(gistId: string): Promise<GitHubApi.Response<any>> {
     const promise = this.github.gists.get({ gist_id: gistId })
-    const res = await promise.catch(async err => {
-      if (String(err).includes('HttpError: Not Found')) {
+    const res = await promise.catch(async _err => {
+      if (String(_err).includes('HttpError: Not Found')) {
         workspace.showMessage('Error: Invalid Gist ID', 'error')
         await this.extCfg.delete('gistId')
       }
       else
-        workspace.showMessage(`Error: ${err}`)
+        workspace.showMessage(`Error: ${_err}`)
       return
     })
 
@@ -102,13 +101,13 @@ export default class GitHubService {
   public async update(gistObject: any): Promise<boolean> {
     const promise = this.github.gists.update(gistObject)
 
-    const res = await promise.catch(async err => {
-      if (String(err).includes('HttpError: Not Found')) {
+    const res = await promise.catch(async _err => {
+      if (String(_err).includes('HttpError: Not Found')) {
         workspace.showMessage('Sync: Invalid Gist ID', 'error')
         await this.extCfg.delete('gistId')
       }
       else
-        workspace.showMessage(err)
+        workspace.showMessage(_err)
       return
     })
 

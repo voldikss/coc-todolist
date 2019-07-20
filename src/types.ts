@@ -1,5 +1,5 @@
 
-export type TodoStatus = 'active' | 'completed' | 'cancelled'
+export type TodoStatus = 'active' | 'completed' | 'cancelled' | 'outdated'
 
 export interface TodoItem {
   desc: string
