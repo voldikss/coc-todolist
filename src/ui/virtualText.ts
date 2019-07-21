@@ -9,7 +9,7 @@ export default class VirtualText {
   public async showInfo(bufnr: number, lnum: number, text: string): Promise<void> {
     if (!this.show) return
 
-    let doc = workspace.getDocument(bufnr)
+    const doc = workspace.getDocument(bufnr)
     if (doc && this.virtualTextSrcId)
       doc.buffer.clearNamespace(this.virtualTextSrcId, 0, -1)
 
@@ -20,7 +20,7 @@ export default class VirtualText {
 
   public async destroy(): Promise<void> {
     const buffer = await this.nvim.buffer
-    let doc = workspace.getDocument(buffer.id)
+    const doc = workspace.getDocument(buffer.id)
     if (doc && this.virtualTextSrcId) {
       doc.buffer.clearNamespace(this.virtualTextSrcId, 0, -1)
       this.show = false

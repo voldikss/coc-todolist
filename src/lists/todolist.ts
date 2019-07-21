@@ -1,4 +1,3 @@
-'use strict'
 import {
   ListAction,
   ListContext,
@@ -7,33 +6,30 @@ import {
   Neovim,
   workspace,
 } from 'coc.nvim'
-import DB from '../util/db'
 import { TodoItem } from '../types'
+import DB from '../util/db'
 
 export default class TodoList extends BasicList {
-  public readonly name = 'todo'
-  public readonly description = 'todo files'
+  public readonly name = 'todolist'
+  public readonly description = 'todolist'
   public readonly defaultAction = 'toggle'
   public actions: ListAction[] = []
 
-  constructor(
-    protected nvim: Neovim,
-    private db: DB
-  ) {
+  constructor(protected nvim: Neovim, private todoList: DB) {
     super(nvim)
 
     this.addAction('toggle', async (item: ListItem) => {
-      const todo: TodoItem = item.data.content
-      const { id } = item.data
-      if (todo.status === 'active')
+      const { todo, id } = item.data
+      const { status } = todo
+      if (status === 'active')
         todo.status = 'completed'
-      else if (todo.status === 'completed')
+      else if (status === 'completed')
         todo.status = 'active'
-      await this.db.update(id, todo)
+      await this.todoList.update(id, todo)
     }, { persist: true, reload: true })
 
     this.addAction('preview', async (item: ListItem, context) => {
-      const todo: TodoItem = item.data.content
+      const { todo } = item.data
       const lines = Object.keys(todo).map(key => `${key}: ${todo[key]}`)
       await this.preview({
         bufname: 'todolist',
@@ -44,19 +40,17 @@ export default class TodoList extends BasicList {
     }, { persist: true, reload: true })
 
     this.addAction('edit', async (item: ListItem) => {
-      let desc = item.data.content.desc
-      const status = item.data.content.status
+      const { id } = item.data
+      let { desc, status } = item.data.todo
       const date = new Date().toString()
       desc = await workspace.requestInput('Input new description', desc) || desc
-
-      const { id } = item.data
-      const todo: TodoItem = { desc, date, status }
-      await this.db.update(id, todo)
+      desc = desc.trim()
+      await this.todoList.update(id, { desc, date, status })
     })
 
     this.addAction('delete', async (item: ListItem) => {
       const { id } = item.data
-      await this.db.delete(id)
+      await this.todoList.delete(id)
     }, { persist: true, reload: true })
   }
 
@@ -69,10 +63,10 @@ export default class TodoList extends BasicList {
   }
 
   public async loadItems(_context: ListContext): Promise<ListItem[]> {
-    const arr = await this.db.load()
+    const arr = await this.todoList.load()
     let res: ListItem[] = []
     for (const item of arr) {
-      let { desc, date, status } = item.content
+      let { desc, date, status } = item.todo
       const icon = {
         active: '🕐',
         completed: '✔️ ',
@@ -86,12 +80,7 @@ export default class TodoList extends BasicList {
       })
     }
 
-    await this.db.dump(arr)
-
-    res = res.sort((a, b) => {
-      return this.compare(a.data.content, b.data.content)
-    })
-
+    res = res.sort((a, b) => this.compare(a.data.todo, b.data.todo))
     return res
   }
 
@@ -100,10 +89,10 @@ export default class TodoList extends BasicList {
     nvim.pauseNotification()
     nvim.command('syntax match TodoDesc /\\v^.*\t/', true)
     nvim.command('syntax match TodoKeyword /\\vcreated at/', true)
-    nvim.command('syntax match TodoDue /\\vcreated at:.*$/ contains=TodoKeyword', true)
+    nvim.command('syntax match TodoDate /\\vcreated at:.*$/ contains=TodoKeyword', true)
     nvim.command('highlight default link TodoDesc String', true)
-    nvim.command('highlight default link TodoKeyword Keyword', true)
-    nvim.command('highlight default link TodoDue Comment', true)
+    nvim.command('highlight default link TodoKeyword Type', true)
+    nvim.command('highlight default link TodoDate Comment', true)
     nvim.resumeNotification().catch(_e => {
       // noop
     })

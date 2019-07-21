@@ -25,7 +25,7 @@ export default class GitHubService {
 
     const githubApiConfig: GitHubApi.Options = {}
 
-    if (token !== null && token !== '') {
+    if (token) {
       githubApiConfig.auth = `token ${token}`
     }
 

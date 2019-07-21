@@ -2,6 +2,7 @@ import { statAsync, writeFile, readFile } from './io'
 import path from 'path'
 import { TodoItem, TodoItemDB } from '../types'
 import uuid = require('uuid')
+import { workspace } from 'coc.nvim'
 
 export default class DB {
   private file: string
@@ -27,8 +28,8 @@ export default class DB {
       items.pop()
     }
 
-    items.unshift({ id: uuid(), content: data, path: this.file })
-
+    items.unshift({ id: uuid(), todo: data, path: this.file })
+    workspace.showMessage(this.file)
     await writeFile(this.file, JSON.stringify(items, null, 2))
   }
 
@@ -45,7 +46,7 @@ export default class DB {
     let items = await this.load()
     let idx = items.findIndex(o => o.id == uid)
     if (idx !== -1) {
-      items[idx].content = data
+      items[idx].todo = data
       await writeFile(this.file, JSON.stringify(items, null, 2))
     }
   }

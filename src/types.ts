@@ -10,7 +10,7 @@ export interface TodoItem {
 
 export interface TodoItemDB {
   id: string
-  content: TodoItem
+  todo: TodoItem
   path: string
 }
 

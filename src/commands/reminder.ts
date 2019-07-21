@@ -10,7 +10,7 @@ export default class Reminder {
   private floating: FloatWindow
   private virtual: VirtualText
 
-  constructor(private nvim: Neovim, private db: DB) {
+  constructor(private nvim: Neovim, private remindList: DB) {
     this.config = workspace.getConfiguration('todolist.reminder')
     workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('todolist.reminder')) {
@@ -50,7 +50,7 @@ export default class Reminder {
           const lnum = await this.nvim.call('line', ['.'])
           await this.virtual.showInfo(bufnr, lnum, msg)
 
-          // TODO: how to remove this event?
+          // TODO: how to delete this event?
           events.on('CursorMoved', async (bufnr, cursor) => {
             await this.virtual.showInfo(bufnr, cursor[0], msg)
           })
@@ -66,26 +66,27 @@ export default class Reminder {
     }
   }
 
-  public async create(todo: TodoItem): Promise<void> {
-    await this.db.add(todo)
+  public async add(todo: TodoItem): Promise<void> {
+    await this.remindList.add(todo)
   }
 
   public async delete(uid: string): Promise<void> {
-    await this.db.delete(uid)
+    await this.remindList.delete(uid)
   }
 
   public async monitor(): Promise<void> {
     this.interval = setInterval(async () => {
-      const remind = await this.db.load()
+      const remind = await this.remindList.load()
       if (!remind || remind.length === 0)
         return
 
       const now = new Date().getTime()
       for (const a of remind) {
-        const { due } = a.content
+        const { todo, id } = a
+        const { due } = todo
         if (Date.parse(due) <= now) {
-          await this.notify(a.content)
-          await this.db.delete(a.id)
+          await this.notify(todo)
+          await this.remindList.delete(id)
         }
       }
     }, 1000)

@@ -4,9 +4,9 @@ import {
   listManager,
   workspace
 } from 'coc.nvim'
-import TodoList from './lists/todolist'
 import { mkdirAsync, statAsync } from './util/io'
-import Todo from './commands/todo'
+import TodoList from './lists/todolist'
+import Todoer from './commands/todoer'
 import DB from './util/db'
 import Reminder from './commands/reminder'
 import Config from './util/config'
@@ -32,9 +32,9 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const remindList = new DB(storagePath, 'remind', maxsize)
   const reminder = new Reminder(nvim, remindList)
 
-  const db = new DB(storagePath, 'todolist', maxsize)
+  const todoList = new DB(storagePath, 'todolist', maxsize)
   const extCfg = new Config(storagePath)
-  const todo = new Todo(reminder, extCfg)
+  const todoer = new Todoer(reminder, todoList, extCfg)
 
   if (monitor) await reminder.monitor()
   if (autoUpload) {
@@ -43,35 +43,35 @@ export async function activate(context: ExtensionContext): Promise<void> {
     const last = await extCfg.fetch('lastUpload')
     if (last && Number(last) < day.getTime()) {
       workspace.showMessage('uploading')
-      await todo.upload(db)
+      await todoer.upload()
     }
   }
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.create',
-      async () => await todo.create(db)
+      async () => await todoer.create()
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.upload',
-      async () => await todo.upload(db)
+      async () => await todoer.upload()
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.download',
-      async () => await todo.download(storagePath, db)
+      async () => await todoer.download(storagePath)
     )
   )
 
   subscriptions.push(
     commands.registerCommand(
       'todolist.export',
-      async () => await todo.export(db)
+      async () => await todoer.export()
     )
   )
 
@@ -84,7 +84,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   subscriptions.push(
     listManager.registerList(
-      new TodoList(nvim, db)
+      new TodoList(nvim, todoList)
     )
   )
 }
