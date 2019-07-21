@@ -32,32 +32,32 @@
         "todolist.autoUpload": {
           "type": "boolean",
           "default": false,
-          "description": "sync your todo every day when coc was started"
+          "description": "upload your todolist every day"
         },
         "todolist.monitor": {
           "type": "boolean",
           "default": false,
-          "description": "whether to monitor the ddl and reminder you at the time"
+          "description": "monitor the todolist and reminder you at the time"
         },
         "todolist.reminder.background": {
           "type": "string",
           "default": "",
-          "description": "notification background"
+          "description": "notification floating window background"
         },
         "todolist.reminder.winblend": {
           "type": "number",
           "default": 100,
-          "description": "opacity of reminder floating window"
+          "description": "opacity of notification floating window"
         },
         "todolist.reminder.width": {
           "type": "number",
           "default": 30,
-          "description": "width of reminder floating window"
+          "description": "width of notification floating window"
         },
         "todolist.reminder.notify": {
           "type": "string",
           "default": "floating",
-          "description": "width of reminder floating window",
+          "description": "how to notify you",
           "enum": [
             "floating",
             "virtual",
@@ -69,12 +69,8 @@
     },
     "commands": [
       {
-        "title": "todolist",
-        "command": "todolist.new"
-      },
-      {
-        "title": "todolist",
-        "command": "todolist.update"
+        "title": "create a new todolist",
+        "command": "todolist.create"
       },
       {
         "title": "upload todolist to gist",
@@ -85,8 +81,12 @@
         "command": "todo.download"
       },
       {
-        "title": "export todolist to markdown or json file",
+        "title": "export todolist as a json or yaml file",
         "command": "todolist.export"
+      },
+      {
+        "title": "clear notification",
+        "command": "todolist.clearNotice"
       }
     ]
   },
