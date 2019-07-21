@@ -15,29 +15,24 @@ export default class Todo {
   }
 
   public async create(db: DB): Promise<void> {
-    let desc: string
-    let date: string
-    let status: TodoStatus
-    let due: string | null
+    const date: string = new Date().toString()
+    const status: TodoStatus = 'active'
 
-    desc = await workspace.requestInput('Describe what to do')
+    let desc = await workspace.requestInput('Describe what to do')
     if (!desc || desc.trim() === '')
       return
-
     desc = desc.trim()
-    date = new Date().toString()
-    status = 'active'
 
-    due = await workspace.requestInput('When to remind you', date)
-    if (due && due.trim() !== '')
-      due = new Date(Date.parse(due.trim())).toString()
+    const remind = await workspace.requestInput('Remind you?(y/n)')
+    if (remind) {
+      let due = await workspace.requestInput('When to remind you', date)
+      if (due.trim().toLowerCase() === 'y') {
+        due = new Date(Date.parse(due.trim())).toString()
+        await this.reminder.create({ desc, date, due })
+      }
+    }
 
-    const todo: TodoItem = { desc, status, date, due }
-    await db.add(todo)
-
-    if (due !== date)
-      await this.reminder.create(todo)
-
+    await db.add({ desc, status, date })
     workspace.showMessage('New todo added')
   }
 
@@ -80,39 +75,30 @@ export default class Todo {
     const todo = await db.load()
     const gist = todo.map(t => t.content)
 
-    const gistId = await this.extCfg.fetch('gistId')
-    if (gistId && gistId.trim() !== '') {
-      let gistObj = {
-        gist_id: gistId,
-        files: {
-          'todolist.json': {
-            content: JSON.stringify(gist, null, 2)
-          }
+    const gistObj = {
+      description: 'coc-todolist gist',
+      files: {
+        'todolist.json': {
+          content: JSON.stringify(gist, null, 2)
         }
       }
+    }
+    let gistId = await this.extCfg.fetch('gistId')
+    if (gistId && gistId.trim()) {
+      gistObj['gist_id'] = gistId
       const status = await this.github.update(gistObj)
       if (status) {
         uploaded = 1
         workspace.showMessage('Uploaded todolist to gist')
-      }
-      else
+      } else
         workspace.showMessage('Failed to uploaded todo gist')
     } else {
-      let gistObj = {
-        description: "coc-todolist",
-        files: {
-          'todolist.json': {
-            content: JSON.stringify(gist, null, 2)
-          }
-        }
-      }
-      const gistId = await this.github.create(gistObj)
+      gistId = await this.github.create(gistObj)
       if (gistId) {
         await this.extCfg.push('gistId', gistId)
         uploaded = 1
         workspace.showMessage('Todo gist created')
-      }
-      else {
+      } else {
         workspace.showMessage('Failed to create todo gist')
       }
     }

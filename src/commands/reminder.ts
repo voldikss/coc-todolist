@@ -22,16 +22,16 @@ export default class Reminder {
     this.virtual = new VirtualText(nvim)
   }
 
-  private async notify(todo: TodoItem): Promise<void> {
+  private async notify(remind: TodoItem): Promise<void> {
     const notice: Notification = {
       title: '🔔 TodoList Reminder',
       content: {
-        '📝': todo.desc,
-        '📅': new Date(todo.date).toLocaleString(),
-        '⏰': new Date(todo.due).toLocaleString()
+        '📝': remind.desc,
+        '📅': new Date(remind.date).toLocaleString(),
+        '⏰': new Date(remind.due).toLocaleString()
       }
     }
-    const msg = `TODO: ${todo.desc} ${todo.due ? 'at ' + todo.due : ''}`
+    const msg = `TODO: ${remind.desc} ${remind.due ? 'at ' + remind.due : ''}`
     const type = this.config.get<string>('notify', 'floating')
 
     switch (type) {
@@ -82,7 +82,7 @@ export default class Reminder {
 
       const now = new Date().getTime()
       for (const a of remind) {
-        const due = a.content.due
+        const { due } = a.content
         if (Date.parse(due) <= now) {
           await this.notify(a.content)
           await this.db.delete(a.id)
