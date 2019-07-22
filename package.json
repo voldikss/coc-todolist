@@ -47,11 +47,11 @@
         "todolist.reminder.background": {
           "type": "string",
           "default": "",
-          "description": "notification floating window background"
+          "description": "notification floating window background(e.g. #000000)"
         },
         "todolist.reminder.winblend": {
           "type": "number",
-          "default": 100,
+          "default": 0,
           "description": "opacity of notification floating window"
         },
         "todolist.reminder.width": {

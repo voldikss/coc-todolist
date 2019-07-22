@@ -96,6 +96,9 @@ export default class FloatWindow {
     if (floatWinBg) {
       nvim.command(`hi TodoReminder guibg=${floatWinBg}`, true)
       nvim.command(`hi FoldColumn guibg=${floatWinBg}`, true) // XXX
+    } else {
+      nvim.command(`hi def link TodoReminder NormalFloat`, true)
+      nvim.command(`hi def link FoldColumn NormalFloat`, true) // XXX
     }
     window.setOption('number', false, true)
     window.setOption('relativenumber', false, true)

@@ -40,11 +40,11 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
 "todolist.reminder.background": {
     "type": "string",
     "default": "",
-    "description": "notification floating window background"
+    "description": "notification floating window background(e.g. #000000)"
 },
 "todolist.reminder.winblend": {
     "type": "number",
-    "default": 100,
+    "default": 0,
     "description": "opacity of notification floating window"
 },
 "todolist.reminder.width": {
@@ -56,12 +56,7 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
     "type": "string",
     "default": "floating",
     "description": "how to notify you",
-    "enum": [
-    "floating",
-    "virtual",
-    "echo",
-    "none"
-    ]
+    "enum": ["floating", "virtual", "echo", "none"]
 }
 ```
 
