@@ -1,12 +1,13 @@
 {
   "name": "coc-todolist",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "todolist/task manager extension for coc.nvim",
   "main": "lib/index.js",
   "publisher": "voldikss",
   "keywords": [
     "coc.nvim",
-    "todo"
+    "todo",
+    "todolist"
   ],
   "engines": {
     "coc": "^0.0.70"
