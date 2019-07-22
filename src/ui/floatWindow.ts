@@ -66,8 +66,8 @@ export default class FloatWindow {
   private async noMoreWins(): Promise<void> {
     const winblend = this.config.get<number>('winblend', 0)
 
-    // 2, can be specified by humans
-    if (this.windows.length > 2) {
+    // only one window preserved
+    if (this.windows.length > 1) {
       const discard = this.windows.shift()
       this.tempWins.push(discard)
       setImmediate(async () => {

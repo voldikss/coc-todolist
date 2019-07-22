@@ -86,5 +86,5 @@ MIT
 
 ## Screenshots
 
-![](https://user-images.githubusercontent.com/20282795/61593012-cff47400-ac0c-11e9-8c92-8b5a409a66a1.gif)
+![](https://user-images.githubusercontent.com/20282795/61623340-08499000-aca9-11e9-9be1-e6d951b075c2.gif)
 ![](https://user-images.githubusercontent.com/20282795/61593014-d1be3780-ac0c-11e9-96cc-e3b787a27f46.png)
