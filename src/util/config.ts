@@ -1,4 +1,3 @@
-import { workspace } from 'coc.nvim'
 import { readFile, statAsync, writeFile } from './io'
 import fs from 'fs'
 import path from 'path'
@@ -50,9 +49,7 @@ export default class Config {
 
   public async push(key: string, data: number | null | boolean | string): Promise<void> {
     let obj = await this.load()
-    // workspace.showMessage(JSON.stringify(obj))
     obj[key] = data
-    // workspace.showMessage(JSON.stringify(obj))
     await writeFile(this.file, JSON.stringify(obj, null, 2))
   }
 

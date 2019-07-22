@@ -11,7 +11,6 @@ export interface TodoItem {
 export interface TodoItemDB {
   id: string
   todo: TodoItem
-  path: string
 }
 
 export interface Notification {
