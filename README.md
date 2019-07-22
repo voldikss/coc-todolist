@@ -17,6 +17,11 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
 ## Configuration
 
 ```jsonc
+"todolist.enable": {
+    "type": "boolean",
+    "default": true,
+    "description": "whether enable this extension"
+},
 "todolist.maxsize": {
     "type": "number",
     "default": 5000,

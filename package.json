@@ -24,6 +24,11 @@
     "configuration": {
       "type": "object",
       "properties": {
+        "todolist.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "whether enable this extension"
+        },
         "todolist.maxsize": {
           "type": "number",
           "default": 5000,
