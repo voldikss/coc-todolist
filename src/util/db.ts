@@ -29,7 +29,6 @@ export default class DB {
     }
 
     items.unshift({ id: uuid(), todo: data, path: this.file })
-    workspace.showMessage(this.file)
     await writeFile(this.file, JSON.stringify(items, null, 2))
   }
 
