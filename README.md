@@ -80,6 +80,12 @@ run `:CocList todolist` to open the todolist
 - Use `preview` to preview a todo item
 - Use `delete` to delete a todo item
 
+## F.A.Q
+
+Q: Where are the todolist data stored?
+
+A: Normally the data is saved in `~/.config/coc/extensions/coc-todolist-data/`, but if you set `g:coc_extension_root` to another location, it will change as well
+
 ## License
 
 MIT
