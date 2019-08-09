@@ -94,3 +94,15 @@ MIT
 
 ![](https://user-images.githubusercontent.com/20282795/61623340-08499000-aca9-11e9-9be1-e6d951b075c2.gif)
 ![](https://user-images.githubusercontent.com/20282795/61593014-d1be3780-ac0c-11e9-96cc-e3b787a27f46.png)
+
+
+## Donation
+
+- Paypal
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/voldikss)
+
+- Wechat
+<div>
+	<img src="https://user-images.githubusercontent.com/20282795/62786670-a933aa00-baf5-11e9-9941-6d2551758faa.jpg" width=400>
+</div>
