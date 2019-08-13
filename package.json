@@ -101,7 +101,7 @@
   "devDependencies": {
     "@chemzqm/tsconfig": "^0.0.3",
     "@chemzqm/tslint-config": "^1.0.18",
-    "@octokit/rest": "^16.28.4",
+    "@octokit/rest": "^16.28.7",
     "@types/node": "^12.0.10",
     "@types/uuid": "^3.4.4",
     "coc.nvim": "^0.0.73",
