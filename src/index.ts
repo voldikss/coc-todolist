@@ -31,6 +31,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   const remindList = new DB(storagePath, 'remind', maxsize)
   const reminder = new Reminder(nvim, remindList)
+  subscriptions.push(reminder)
 
   const todoList = new DB(storagePath, 'todolist', maxsize)
   const extCfg = new Config(storagePath)

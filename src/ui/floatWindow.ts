@@ -77,7 +77,7 @@ export default class FloatWindow {
             resolve => setTimeout(resolve, 500 / (100 - winblend))
           )
         }
-        await discard.close()
+        await discard.close(true)
         this.tempWins.shift()
       })
     }
@@ -128,7 +128,7 @@ export default class FloatWindow {
   public async destroy(): Promise<void> {
     for (const w of this.windows.concat(this.tempWins)) {
       const isValid = await w.valid
-      if (isValid) await w.close()
+      if (isValid) await w.close(true)
     }
   }
 }

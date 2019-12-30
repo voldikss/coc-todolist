@@ -3,14 +3,16 @@ import { TodoItem, Notification } from '../types'
 import DB from '../util/db'
 import FloatWindow from '../ui/floatWindow'
 import VirtualText from '../ui/virtualText'
+import { Dispose } from '../util/dispose'
 
-export default class Reminder {
+export default class Reminder extends Dispose {
   private interval: NodeJS.Timeout
   private config: WorkspaceConfiguration
   private floating: FloatWindow
   private virtual: VirtualText
 
   constructor(private nvim: Neovim, private remindList: DB) {
+    super()
     this.config = workspace.getConfiguration('todolist.reminder')
     workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('todolist.reminder')) {
@@ -99,5 +101,11 @@ export default class Reminder {
 
   public stopRemind(): void {
     if (this.interval) clearInterval(this.interval)
+  }
+
+  public dispose(): void {
+    // tslint:disable-next-line: no-floating-promises
+    this.clearNotice()
+    this.stopRemind()
   }
 }
