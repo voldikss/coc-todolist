@@ -1,10 +1,13 @@
-const path = require('path');
+const path = require('path')
 
 module.exports = {
   entry: './src/index.ts',
   target: 'node',
   mode: 'none',
   resolve: {
+    alias: {
+      'universal-user-agent$': 'universal-user-agent/dist-node/index.js'
+    },
     mainFields: ['module', 'main'],
     extensions: ['.js', '.ts']
   },
@@ -39,4 +42,4 @@ module.exports = {
     __dirname: false,
     __filename: false
   }
-};
+}
