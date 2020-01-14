@@ -1,113 +1,140 @@
 import { workspace } from 'coc.nvim'
-import { TodoItem, TodoStatus } from '../types'
+import { TodoItem, GistObject } from '../types'
 import { statAsync } from '../util/io'
-import GitHubService from '../service'
 import path from 'path'
 import DB from '../util/db'
-import Reminder from './reminder'
-import Config from '../util/config'
+import { Gist } from '../gists'
+import TodolistInfo from '../util/info'
 
 export default class Todoer {
-  private github: GitHubService
+  private gist: Gist
 
-  constructor(private reminder: Reminder, private todoList: DB, private extCfg: Config) {
-    this.github = new GitHubService(this.extCfg)
+  constructor(private todoList: DB, private info: TodolistInfo) {
+    this.gist = new Gist()
+  }
+
+  private async getGitHubToken(): Promise<string> {
+    let token = await this.info.fetch('userToken')
+    if (!token) {
+      token = await workspace.requestInput('Input github token')
+      if (!token || token.trim() === '') return
+      token = token.trim()
+      await this.info.push('userToken', token)
+    }
+    return token
   }
 
   public async create(): Promise<void> {
-    const date: string = new Date().toString()
-    const status: TodoStatus = 'active'
+    const todo: TodoItem = {
+      desc: '',
+      date: new Date().toString(),
+      status: 'active',
+      remind: false,
+      due: null
+    }
 
     let desc = await workspace.requestInput('Describe what to do')
-    if (!desc || desc.trim() === '')
-      return
-    desc = desc.trim()
+    if (!desc || desc.trim() === '') return
+    todo.desc = desc.trim()
 
     const remind = await workspace.requestInput('Set a reminder for you?(y/n)')
     if (remind && remind.trim().toLowerCase() === 'y') {
-      let due = await workspace.requestInput('When to remind you', date)
+      todo.remind = true
+      let due = await workspace.requestInput('When to remind you', new Date().toString())
       if (due && due.trim()) {
         due = new Date(Date.parse(due.trim())).toString()
-        await this.reminder.add({ desc, date, due })
+        todo.due = due
       }
     }
-
-    await this.todoList.add({ desc, status, date })
+    await this.todoList.add(todo)
     workspace.showMessage('New todo added')
   }
 
   public async download(directory: string): Promise<void> {
-    const init = await this.github.init()
-    if (!init) return
-
     // if gist id exists, use that to download gist
-    let gistId = await this.extCfg.fetch('gistId')
-    if (!gistId || gistId.trim() === '') {
-      gistId = await workspace.requestInput('Input gist id')
-      if (!gistId || gistId.trim() === '')
-        return
-      gistId = gistId.trim()
-      await this.extCfg.push('gistId', gistId)
-    }
-    const gist = await this.github.read(gistId)
-
-    const todoFile = path.join(directory, 'todolist.json')
-    const todoFileOld = path.join(directory, 'todolist.json.old')
-    const stat = await statAsync(todoFile)
-
-    if (stat && stat.isFile()) {
-      await workspace.renameFile(todoFile, todoFileOld)
+    let gistid = await this.info.fetch('gistId')
+    if (!gistid || gistid.trim() === '') {
+      gistid = await workspace.requestInput('Input gist id')
+      if (!gistid || gistid.trim() === '') return
+      gistid = gistid.trim()
+      await this.info.push('gistId', gistid)
     }
 
-    const { content } = gist.data.files['todolist.json']
-    if (content) {
-      const todos: TodoItem[] = JSON.parse(content)
-      await this.todoList.updateAll(todos)
-      workspace.showMessage('Downloaded todolist from gist')
+    const res = await this.gist.get(`/gists/${gistid}`)
+    if (res.status == 200 && res.responseText) {
+      const gist: GistObject = JSON.parse(res.responseText)
+      const todoFile = path.join(directory, 'todolist.json')
+      const todoFileBak = path.join(directory, 'todolist.json.old')
+      const stat = await statAsync(todoFile)
+      if (stat && stat.isFile()) {
+        await workspace.renameFile(todoFile, todoFileBak, { overwrite: true })
+      }
+
+      const { content } = gist.files['todolist.json']
+      if (content) {
+        const todos: TodoItem[] = JSON.parse(content)
+        await this.todoList.updateAll(todos)
+        workspace.showMessage('Downloaded todolist from gist')
+      }
+    } else if (res.status === 404) {
+      workspace.showMessage('Remote gist was not found', 'error')
+      await this.info.delete('gistId')
+      return
+    } else {
+      workspace.showMessage('Downloading error', 'error')
+      return
     }
   }
 
   public async upload(): Promise<void> {
-    let uploaded = 0
-    const init = await this.github.init()
-    if (!init) return
+    this.gist.token = await this.getGitHubToken() // TODO
 
-    const todo = await this.todoList.load()
-    const gist = todo.map(t => t.todo)
-
-    const gistObj = {
+    const record = await this.todoList.load()
+    const todo = record.map(i => i.todo)
+    const gistObj: GistObject = {
       description: 'coc-todolist gist',
+      public: false,
       files: {
         'todolist.json': {
-          content: JSON.stringify(gist, null, 2)
+          content: JSON.stringify(todo, null, 2)
         }
       }
     }
-    let gistId = await this.extCfg.fetch('gistId')
+    const data = Buffer.from(JSON.stringify(gistObj))
+
+    // If gistId exists, upload
+    let gistId = await this.info.fetch('gistId')
     if (gistId && gistId.trim()) {
-      gistObj['gist_id'] = gistId
-      const status = await this.github.update(gistObj)
-      if (status) {
-        uploaded = 1
-        workspace.showMessage('Uploaded todolist to gist')
-      } else
-        workspace.showMessage('Failed to uploaded todo gist')
-    } else {
-      gistId = await this.github.create(gistObj)
-      if (gistId) {
-        await this.extCfg.push('gistId', gistId)
-        uploaded = 1
-        workspace.showMessage('Todo gist created')
-      } else {
-        workspace.showMessage('Failed to create todo gist')
+      const res = await this.gist.patch(`/gists/${gistId}`, data)
+      if (res.status === 200) {
+        workspace.showMessage('Updated gist todolist')
+        await this.updateLog()
+        return
+      } else if (res.status !== 404) {
+        workspace.showMessage('Failed to uploaded todo gist', 'error')
+        return
+      } else { // 404: delete gistId and create a new gist
+        workspace.showMessage('Remote gist was not found', 'error')
+        await this.info.delete('gistId')
       }
     }
-
-    if (uploaded) {
-      const now = new Date()
-      const day = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      await this.extCfg.push('lastUpload', day.getTime())
+    // gistId doesn't exists, fallback to creating
+    const res = await this.gist.post('/gists', data)
+    if (res.status == 201 && res.responseText) {
+      const gist: GistObject = JSON.parse(res.responseText)
+      await this.info.push('gistId', gist.id)
+      workspace.showMessage('Uploaded a new todolist to gist')
+      await this.updateLog()
+    } else {
+      workspace.showMessage('Failed to create todolist from gist', 'error')
+      return
     }
+  }
+
+  private async updateLog(): Promise<void> {
+    const now = new Date()
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    await this.info.push('lastUpload', day.getTime())
   }
 
   public async export(): Promise<void> {

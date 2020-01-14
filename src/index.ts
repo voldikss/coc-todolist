@@ -8,14 +8,13 @@ import { mkdirAsync, statAsync } from './util/io'
 import TodoList from './lists/todolist'
 import Todoer from './commands/todoer'
 import DB from './util/db'
-import Reminder from './commands/reminder'
-import Config from './util/config'
+import Guarder from './commands/guarder'
+import TodolistInfo from './util/info'
 
 export async function activate(context: ExtensionContext): Promise<void> {
   const config = workspace.getConfiguration('todolist')
   const enable = config.get<boolean>('enable', true)
-  if (!enable)
-    return
+  if (!enable) return
 
   const maxsize = config.get<number>('maxsize', 5000)
   const monitor = config.get<boolean>('monitor', false)
@@ -29,19 +28,17 @@ export async function activate(context: ExtensionContext): Promise<void> {
     await mkdirAsync(storagePath)
   }
 
-  const remindList = new DB(storagePath, 'remind', maxsize)
-  const reminder = new Reminder(nvim, remindList)
-  subscriptions.push(reminder)
-
   const todoList = new DB(storagePath, 'todolist', maxsize)
-  const extCfg = new Config(storagePath)
-  const todoer = new Todoer(reminder, todoList, extCfg)
+  const info = new TodolistInfo(storagePath)
+  const todoer = new Todoer(todoList, info)
+  const guarder = new Guarder(nvim, todoList)
+  subscriptions.push(guarder)
 
-  if (monitor) await reminder.monitor()
+  if (monitor) await guarder.monitor()
   if (autoUpload) {
     const now = new Date()
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const last = await extCfg.fetch('lastUpload')
+    const last = await info.fetch('lastUpload')
     if (last && Number(last) < day.getTime()) {
       workspace.showMessage('uploading')
       await todoer.upload()
@@ -79,7 +76,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   subscriptions.push(
     commands.registerCommand(
       'todolist.clearRemind',
-      async () => await reminder.clearNotice()
+      async () => await guarder.clearNotice()
     )
   )
 

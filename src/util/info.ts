@@ -2,7 +2,7 @@ import { readFile, statAsync, writeFile } from './io'
 import fs from 'fs'
 import path from 'path'
 
-export default class Config {
+export default class TodolistInfo {
   private file: string
   constructor(directory: string) {
     this.file = path.join(directory, 'config.json')

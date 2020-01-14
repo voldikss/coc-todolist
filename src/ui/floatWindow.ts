@@ -39,7 +39,7 @@ export default class FloatWindow {
     hl.addLine(`${margin}${notice.title}`, 'Title')
     for (const [item, detail] of Object.entries(notice.content)) {
       hl.addLine(item, 'Keyword')
-      hl.addText(': ')
+      hl.addText(' ')
       hl.addText(detail, 'String')
     }
 

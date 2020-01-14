@@ -6,7 +6,7 @@ import {
   Neovim,
   workspace,
 } from 'coc.nvim'
-import { TodoItem } from '../types'
+import { TodoItem, TodoData } from '../types'
 import DB from '../util/db'
 
 export default class TodoList extends BasicList {
@@ -19,17 +19,17 @@ export default class TodoList extends BasicList {
     super(nvim)
 
     this.addAction('toggle', async (item: ListItem) => {
-      const { todo, id } = item.data
+      const { todo, uid } = item.data as TodoData
       const { status } = todo
       if (status === 'active')
-        todo.status = 'completed'
-      else if (status === 'completed')
+        todo.status = 'archived'
+      else if (status === 'archived')
         todo.status = 'active'
-      await this.todoList.update(id, todo)
+      await this.todoList.update(uid, todo)
     }, { persist: true, reload: true })
 
     this.addAction('preview', async (item: ListItem, context) => {
-      const { todo } = item.data
+      const { todo } = item.data as TodoData
       const lines = Object.keys(todo).map(key => `${key}: ${todo[key]}`)
       await this.preview({
         bufname: 'todolist',
@@ -40,12 +40,13 @@ export default class TodoList extends BasicList {
     }, { persist: true, reload: true })
 
     this.addAction('edit', async (item: ListItem) => {
-      const { id } = item.data
-      let { desc, status } = item.data.todo
+      const { uid } = item.data as TodoData
+      const todo = item.data.todo
       const date = new Date().toString()
-      desc = await workspace.requestInput('Input new description', desc) || desc
-      desc = desc.trim()
-      await this.todoList.update(id, { desc, date, status })
+      const desc = await workspace.requestInput('Input new description', todo.desc)
+      todo.date = date
+      todo.desc = desc.trim()
+      await this.todoList.update(uid, todo)
     })
 
     this.addAction('delete', async (item: ListItem) => {
@@ -68,8 +69,8 @@ export default class TodoList extends BasicList {
     for (const item of arr) {
       let { desc, date, status } = item.todo
       const icon = {
-        active: '🕐',
-        completed: '✔️ ',
+        active: '⏱',
+        archived: '✔️',
       }
       const shortcut = icon[status]
 
@@ -94,7 +95,7 @@ export default class TodoList extends BasicList {
     nvim.command('highlight default link TodoKeyword Type', true)
     nvim.command('highlight default link TodoDate Comment', true)
     nvim.resumeNotification().catch(_e => {
-      // noop
+      // nop
     })
   }
 }

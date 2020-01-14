@@ -5,13 +5,13 @@ import FloatWindow from '../ui/floatWindow'
 import VirtualText from '../ui/virtualText'
 import { Dispose } from '../util/dispose'
 
-export default class Reminder extends Dispose {
+export default class Guarder extends Dispose {
   private interval: NodeJS.Timeout
   private config: WorkspaceConfiguration
   private floating: FloatWindow
   private virtual: VirtualText
 
-  constructor(private nvim: Neovim, private remindList: DB) {
+  constructor(private nvim: Neovim, private todoList: DB) {
     super()
     this.config = workspace.getConfiguration('todolist.reminder')
     workspace.onDidChangeConfiguration(e => {
@@ -24,16 +24,16 @@ export default class Reminder extends Dispose {
     this.virtual = new VirtualText(nvim)
   }
 
-  private async notify(remind: TodoItem): Promise<void> {
+  private async notify(todo: TodoItem): Promise<void> {
     const notice: Notification = {
-      title: '🔔 TodoList Reminder',
+      title: ' 🗁  TodoList Guarder',
       content: {
-        '📝': remind.desc,
-        '📅': new Date(remind.date).toLocaleString(),
-        '⏰': new Date(remind.due).toLocaleString()
+        '🗒': todo.desc,
+        '🗓': new Date(todo.date).toLocaleString(),
+        '🕭': new Date(todo.due).toLocaleString()
       }
     }
-    const msg = `TODO: ${remind.desc} ${remind.due ? 'at ' + remind.due : ''}`
+    const msg = `TODO: ${todo.desc} ${todo.due ? 'at ' + todo.due : ''}`
     const type = this.config.get<string>('notify', 'floating')
 
     switch (type) {
@@ -68,30 +68,25 @@ export default class Reminder extends Dispose {
     }
   }
 
-  public async add(todo: TodoItem): Promise<void> {
-    await this.remindList.add(todo)
-  }
-
-  public async delete(uid: string): Promise<void> {
-    await this.remindList.delete(uid)
+  public async deactive(uid: string, todo: TodoItem): Promise<void> {
+    todo.status = 'archived'
+    await this.todoList.update(uid, todo)
   }
 
   public async monitor(): Promise<void> {
     this.interval = setInterval(async () => {
-      const remind = await this.remindList.load()
-      if (!remind || remind.length === 0)
-        return
-
+      const todolist = await this.todoList.load()
+      if (!todolist || todolist.length === 0) return
       const now = new Date().getTime()
-      for (const a of remind) {
-        const { todo, id } = a
-        const { due } = todo
-        if (Date.parse(due) <= now) {
+      for (const a of todolist) {
+        const { todo, uid } = a
+        const { due, status, remind } = todo
+        if (remind && due && Date.parse(due) <= now && status == 'active') {
           await this.notify(todo)
-          await this.remindList.delete(id)
+          await this.deactive(uid, todo)
         }
       }
-    }, 1000)
+    }, 1000) // TODO
   }
 
   public async clearNotice(): Promise<void> {
@@ -99,13 +94,13 @@ export default class Reminder extends Dispose {
     await this.virtual.destroy()
   }
 
-  public stopRemind(): void {
+  public stopGuard(): void {
     if (this.interval) clearInterval(this.interval)
   }
 
   public dispose(): void {
     // tslint:disable-next-line: no-floating-promises
     this.clearNotice()
-    this.stopRemind()
+    this.stopGuard()
   }
 }

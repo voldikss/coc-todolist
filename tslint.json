@@ -1,5 +1,5 @@
 {
-  "extends": "./node_modules/@chemzqm/tslint-config/tslint.json",
+  "extends": "./node_modules/@voldikss/tslint-config/tslint.json",
   "rules": {
   },
   "linterOptions": {
@@ -7,4 +7,3 @@
     ]
   }
 }
-

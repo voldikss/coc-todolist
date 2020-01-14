@@ -1,6 +1,6 @@
 import { statAsync, writeFile, readFile } from './io'
 import path from 'path'
-import { TodoItem, TodoItemDB } from '../types'
+import { TodoItem, TodoData } from '../types'
 import uuid = require('uuid')
 
 export default class DB {
@@ -14,11 +14,11 @@ export default class DB {
     this.file = path.join(directory, `${name}.json`)
   }
 
-  public async load(): Promise<TodoItemDB[]> {
+  public async load(): Promise<TodoData[]> {
     let stat = await statAsync(this.file)
     if (!stat || !stat.isFile()) return []
     let content = await readFile(this.file)
-    return JSON.parse(content) as TodoItemDB[]
+    return JSON.parse(content) as TodoData[]
   }
 
   public async add(data: TodoItem): Promise<void> {
@@ -27,13 +27,13 @@ export default class DB {
       items.pop()
     }
 
-    items.unshift({ id: uuid(), todo: data })
+    items.unshift({ uid: uuid(), todo: data })
     await writeFile(this.file, JSON.stringify(items, null, 2))
   }
 
   public async delete(uid: string): Promise<void> {
     let items = await this.load()
-    let idx = items.findIndex(o => o.id == uid)
+    let idx = items.findIndex(o => o.uid == uid)
     if (idx !== -1) {
       items.splice(idx, 1)
       await writeFile(this.file, JSON.stringify(items, null, 2))
@@ -42,7 +42,7 @@ export default class DB {
 
   public async update(uid: string, data: TodoItem): Promise<void> {
     let items = await this.load()
-    let idx = items.findIndex(o => o.id == uid)
+    let idx = items.findIndex(o => o.uid == uid)
     if (idx !== -1) {
       items[idx].todo = data
       await writeFile(this.file, JSON.stringify(items, null, 2))
@@ -56,7 +56,7 @@ export default class DB {
     }
   }
 
-  public async dump(data: TodoItemDB[]): Promise<void> {
+  public async dump(data: TodoData[]): Promise<void> {
     await writeFile(this.file, JSON.stringify(data, null, 2))
   }
 }
