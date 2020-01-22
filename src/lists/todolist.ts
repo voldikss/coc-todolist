@@ -21,10 +21,11 @@ export default class TodoList extends BasicList {
     this.addAction('toggle', async (item: ListItem) => {
       const { todo, uid } = item.data as TodoData
       const { status } = todo
-      if (status === 'active')
+      if (status === 'active') {
         todo.status = 'archived'
-      else if (status === 'archived')
+      } else if (status === 'archived') {
         todo.status = 'active'
+      }
       await this.todoList.update(uid, todo)
     }, { persist: true, reload: true })
 
@@ -50,8 +51,8 @@ export default class TodoList extends BasicList {
     })
 
     this.addAction('delete', async (item: ListItem) => {
-      const { id } = item.data
-      await this.todoList.delete(id)
+      const { uid } = item.data as TodoData
+      await this.todoList.delete(uid)
     }, { persist: true, reload: true })
   }
 
