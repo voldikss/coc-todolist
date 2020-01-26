@@ -75,17 +75,26 @@ export default class TodoList extends BasicList {
 
   public async loadItems(_context: ListContext): Promise<ListItem[]> {
     const arr = await this.todoList.load()
+    const config = workspace.getConfiguration('todolist')
+    const dateFormat = config.get<string>('dateFormat')
     let res: ListItem[] = []
     for (const item of arr) {
-      let { desc, date, status } = item.todo
+      let { desc, date, status, due } = item.todo
       const icon = {
         active: '⏱',
         archived: '✔️',
       }
       const shortcut = icon[status]
+      date = moment(date).format(dateFormat)
+
+      let label = `${shortcut} ${desc}\t\tcreated at: ${date}`
+      if (due) {
+        due = moment(due).format(dateFormat)
+        label = `${label}\t\tdue: ${due}`
+      }
 
       res.push({
-        label: `${shortcut} ${desc}\t\tcreated at: ${date}`,
+        label,
         filterText: desc + status,
         data: Object.assign({}, item)
       })
