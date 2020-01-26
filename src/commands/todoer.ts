@@ -5,6 +5,7 @@ import path from 'path'
 import DB from '../util/db'
 import { Gist } from '../gists'
 import TodolistInfo from '../util/info'
+import moment from 'moment'
 
 export default class Todoer {
   private gist: Gist
@@ -32,6 +33,7 @@ export default class Todoer {
       remind: false,
       due: null
     }
+    const config = workspace.getConfiguration('todolist')
 
     let desc = await workspace.requestInput('Describe what to do')
     if (!desc || desc.trim() === '') return
@@ -40,9 +42,11 @@ export default class Todoer {
     const remind = await workspace.requestInput('Set a reminder for you?(y/n)')
     if (remind && remind.trim().toLowerCase() === 'y') {
       todo.remind = true
-      let due = await workspace.requestInput('When to remind you', new Date().toString())
-      if (due && due.trim()) {
-        due = new Date(Date.parse(due.trim())).toString()
+      const dateFormat = config.get<string>('dateFormat')
+      let dueDate = moment().format(dateFormat)
+      dueDate = await workspace.requestInput('When to remind you', dueDate)
+      if (dueDate && dueDate.trim()) {
+        const due = moment(dueDate.trim(), dateFormat).toDate().toString()
         todo.due = due
       }
     }
