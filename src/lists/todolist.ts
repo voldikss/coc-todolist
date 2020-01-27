@@ -87,7 +87,7 @@ export default class TodoList extends BasicList {
       const shortcut = icon[status]
       date = moment(date).format(dateFormat)
 
-      let label = `${shortcut} ${desc}\t\tcreated at: ${date}`
+      let label = `${shortcut} ${desc}\t\tdate: ${date}`
       if (due) {
         due = moment(due).format(dateFormat)
         label = `${label}\t\tdue: ${due}`
@@ -105,14 +105,16 @@ export default class TodoList extends BasicList {
   }
 
   public doHighlight(): void {
-    let { nvim } = this
+    const { nvim } = this
     nvim.pauseNotification()
-    nvim.command('syntax match TodoDesc /\\v^.*\t/', true)
-    nvim.command('syntax match TodoKeyword /\\vcreated at/', true)
-    nvim.command('syntax match TodoDate /\\vcreated at:.*$/ contains=TodoKeyword', true)
-    nvim.command('highlight default link TodoDesc String', true)
-    nvim.command('highlight default link TodoKeyword Type', true)
-    nvim.command('highlight default link TodoDate Comment', true)
+    nvim.command('syn match TodoIcon /\\v⏱|✔️/', true)
+    nvim.command('syn match TodoKeyword /\\v(date|due):/', true)
+    nvim.command('syn match TodoDate /\\v\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}/', true)
+    nvim.command('syn match TodoDesc /\\v.*/ contains=TodoIcon,TodoKeyword,TodoDate', true)
+    nvim.command('hi def link TodoIcon Constant', true)
+    nvim.command('hi def link TodoKeyword Keyword', true)
+    nvim.command('hi def link TodoDate Comment', true)
+    nvim.command('hi def link TodoDesc String', true)
     nvim.resumeNotification().catch(_e => {
       // nop
     })
