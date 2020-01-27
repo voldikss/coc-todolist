@@ -38,6 +38,11 @@
           "default": 5000,
           "description": "maxsize of todolist"
         },
+        "todolist.dateFormat": {
+          "type": "string",
+          "default": "YYYY-MM-DD HH:mm",
+          "description": "dates format"
+        },
         "todolist.autoUpload": {
           "type": "boolean",
           "default": false,
@@ -102,11 +107,12 @@
   "author": "dyzplus@gmail.com",
   "license": "MIT",
   "devDependencies": {
-    "@voldikss/tsconfig": "^1.0.0",
-    "@voldikss/tslint-config": "^1.0.6",
     "@types/node": "^13.1.6",
     "@types/uuid": "^3.4.6",
+    "@voldikss/tsconfig": "^1.0.0",
+    "@voldikss/tslint-config": "^1.0.6",
     "coc.nvim": "^0.0.74",
+    "moment": "^2.24.0",
     "request-light": "^0.2.5",
     "rimraf": "^3.0.0",
     "ts-loader": "^6.2.1",

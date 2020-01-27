@@ -8,6 +8,7 @@ import {
 } from 'coc.nvim'
 import { TodoItem, TodoData } from '../types'
 import DB from '../util/db'
+import moment from 'moment'
 
 export default class TodoList extends BasicList {
   public readonly name = 'todolist'
@@ -43,9 +44,17 @@ export default class TodoList extends BasicList {
     this.addAction('edit', async (item: ListItem) => {
       const { uid } = item.data as TodoData
       const todo = item.data.todo
+      const config = workspace.getConfiguration('todolist')
+      const dateFormat = config.get<string>('dateFormat')
       const date = new Date().toString()
+      let dueDate = moment(todo.due).format(dateFormat)
       const desc = await workspace.requestInput('Input new description', todo.desc)
+      dueDate = await workspace.requestInput(`Input new due (${dateFormat})`, dueDate)
       todo.date = date
+      if (dueDate && dueDate.trim()) {
+        const due = moment(dueDate.trim(), dateFormat).toDate().toString()
+        todo.due = due
+      }
       todo.desc = desc.trim()
       await this.todoList.update(uid, todo)
     })
@@ -66,17 +75,26 @@ export default class TodoList extends BasicList {
 
   public async loadItems(_context: ListContext): Promise<ListItem[]> {
     const arr = await this.todoList.load()
+    const config = workspace.getConfiguration('todolist')
+    const dateFormat = config.get<string>('dateFormat')
     let res: ListItem[] = []
     for (const item of arr) {
-      let { desc, date, status } = item.todo
+      let { desc, date, status, due } = item.todo
       const icon = {
         active: '⏱',
         archived: '✔️',
       }
       const shortcut = icon[status]
+      date = moment(date).format(dateFormat)
+
+      let label = `${shortcut} ${desc}\t\tcreated at: ${date}`
+      if (due) {
+        due = moment(due).format(dateFormat)
+        label = `${label}\t\tdue: ${due}`
+      }
 
       res.push({
-        label: `${shortcut} ${desc}\t\tcreated at: ${date}`,
+        label,
         filterText: desc + status,
         data: Object.assign({}, item)
       })
