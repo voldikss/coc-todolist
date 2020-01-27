@@ -11,8 +11,8 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
 ## Features
 
 - Allow to set a reminder for a todo item
-- Auto sync your todolist with gist(require github token once: [generate](https://github.com/settings/tokens/new?scopes=gist&description=coc-todolist%20gist))
-- Manage you todolist with CocList
+- Auto sync your todolist with gist(require github token once: [click here to generate](https://github.com/settings/tokens/new?scopes=gist&description=coc-todolist%20gist))
+- Manage your todolist using CocList
 
 ## Configuration
 
@@ -26,6 +26,11 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
     "type": "number",
     "default": 5000,
     "description": "maxsize of todolist"
+},
+"todolist.dateFormat": {
+  "type": "string",
+  "default": "YYYY-MM-DD HH:mm",
+  "description": "dates format"
 },
 "todolist.autoUpload": {
     "type": "boolean",
