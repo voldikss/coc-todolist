@@ -55,6 +55,8 @@ export default class Todoer {
   }
 
   public async download(directory: string): Promise<void> {
+    let statusItem = workspace.createStatusBarItem(0, { progress: true })
+    statusItem.text = 'downloading todolist'
     // if gist id exists, use that to download gist
     let gistid = await this.info.fetch('gistId')
     if (!gistid || gistid.trim() === '') {
@@ -64,7 +66,9 @@ export default class Todoer {
       await this.info.push('gistId', gistid)
     }
 
+    statusItem.show()
     const res = await this.gist.get(`/gists/${gistid}`)
+    statusItem.hide()
     if (res.status == 200 && res.responseText) {
       const gist: GistObject = JSON.parse(res.responseText)
       const todoFile = path.join(directory, 'todolist.json')
@@ -91,6 +95,9 @@ export default class Todoer {
   }
 
   public async upload(): Promise<void> {
+    let statusItem = workspace.createStatusBarItem(0, { progress: true })
+    statusItem.text = 'uploading todolist'
+
     this.gist.token = await this.getGitHubToken() // TODO
 
     const record = await this.todoList.load()
@@ -109,7 +116,9 @@ export default class Todoer {
     // If gistId exists, upload
     let gistId = await this.info.fetch('gistId')
     if (gistId && gistId.trim()) {
+      statusItem.show()
       const res = await this.gist.patch(`/gists/${gistId}`, data)
+      statusItem.hide()
       if (res.status === 200) {
         workspace.showMessage('Updated gist todolist')
         await this.updateLog()
