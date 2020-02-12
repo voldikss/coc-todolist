@@ -45,17 +45,21 @@ export default class TodoList extends BasicList {
       const { uid } = item.data as TodoData
       const todo = item.data.todo
       const config = workspace.getConfiguration('todolist')
-      const dateFormat = config.get<string>('dateFormat')
-      const date = new Date().toString()
-      let dueDate = moment(todo.due).format(dateFormat)
       const desc = await workspace.requestInput('Input new description', todo.desc)
-      dueDate = await workspace.requestInput(`Input new due (${dateFormat})`, dueDate)
-      todo.date = date
-      if (dueDate && dueDate.trim()) {
+      if (!desc || desc.trim() === '') return
+      todo.desc = desc.trim()
+
+      const remind = await workspace.requestInput('Set a reminder for you?(y/n)')
+      if (!remind || remind.trim() === '') return
+      if (remind.trim().toLowerCase() === 'y') {
+        todo.remind = true
+        const dateFormat = config.get<string>('dateFormat')
+        let dueDate = moment().format(dateFormat)
+        dueDate = await workspace.requestInput('When to remind you', dueDate)
+        if (!dueDate || dueDate.trim() === '') return
         const due = moment(dueDate.trim(), dateFormat).toDate().toString()
         todo.due = due
       }
-      todo.desc = desc.trim()
       await this.todoList.update(uid, todo)
     })
 
