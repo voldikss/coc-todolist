@@ -79,31 +79,21 @@ export default class TodoList extends BasicList {
 
   public async loadItems(_context: ListContext): Promise<ListItem[]> {
     const arr = await this.todoList.load()
-    const config = workspace.getConfiguration('todolist')
-    const dateFormat = config.get<string>('dateFormat')
     let res: ListItem[] = []
     for (const item of arr) {
-      let { desc, date, status, due } = item.todo
+      let { desc, status } = item.todo
       const icon = {
-        active: '⏱',
-        archived: '✔️',
+        active: '[*]',
+        archived: '[√]',
       }
       const shortcut = icon[status]
-      date = moment(date).format(dateFormat)
-
-      let label = `${shortcut} ${desc}\t\tdate: ${date}`
-      if (due) {
-        due = moment(due).format(dateFormat)
-        label = `${label}\t\tdue: ${due}`
-      }
-
+      let label = `${shortcut} ${desc}`
       res.push({
         label,
         filterText: desc + status,
         data: Object.assign({}, item)
       })
     }
-
     res = res.sort((a, b) => this.compare(a.data.todo, b.data.todo))
     return res
   }
@@ -111,13 +101,9 @@ export default class TodoList extends BasicList {
   public doHighlight(): void {
     const { nvim } = this
     nvim.pauseNotification()
-    nvim.command('syn match TodoIcon /\\v⏱|✔️/', true)
-    nvim.command('syn match TodoKeyword /\\v(date|due):/', true)
-    nvim.command('syn match TodoDate /\\v\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}/', true)
-    nvim.command('syn match TodoDesc /\\v.*/ contains=TodoIcon,TodoKeyword,TodoDate', true)
+    nvim.command('syn match TodoIcon /\\v\\[.\\]/', true)
+    nvim.command('syn match TodoDesc /\\v%4v.*$/', true)
     nvim.command('hi def link TodoIcon Constant', true)
-    nvim.command('hi def link TodoKeyword Keyword', true)
-    nvim.command('hi def link TodoDate Comment', true)
     nvim.command('hi def link TodoDesc String', true)
     nvim.resumeNotification().catch(_e => {
       // nop
