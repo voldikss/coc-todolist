@@ -15,7 +15,7 @@ export interface TodoData {
 
 export interface Notification {
   title: string
-  content: object
+  content: string[]
 }
 
 export interface GistObject {

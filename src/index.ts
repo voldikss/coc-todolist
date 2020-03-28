@@ -19,6 +19,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const maxsize = config.get<number>('maxsize', 5000)
   const monitor = config.get<boolean>('monitor', false)
   const autoUpload = config.get<boolean>('autoUpload', false)
+  const type = config.get<string>('notify', 'floating')
 
   const { subscriptions, storagePath } = context
   const { nvim } = workspace
@@ -31,7 +32,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const todoList = new DB(storagePath, 'todolist', maxsize)
   const info = new TodolistInfo(storagePath)
   const todoer = new Todoer(todoList, info)
-  const guarder = new Guarder(nvim, todoList)
+  const guarder = new Guarder(todoList, type)
   subscriptions.push(guarder)
 
   if (monitor) await guarder.monitor()

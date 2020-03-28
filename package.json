@@ -51,24 +51,24 @@
         "todolist.monitor": {
           "type": "boolean",
           "default": false,
-          "description": "monitor the todolist and reminder you at the time"
+          "description": "monitor the todolist and remind you at the time"
         },
-        "todolist.reminder.background": {
+        "todolist.floatwin.background": {
           "type": "string",
           "default": "",
           "description": "notification floating window background(e.g. #000000)"
         },
-        "todolist.reminder.winblend": {
+        "todolist.floatwin.winblend": {
           "type": "number",
           "default": 0,
           "description": "opacity of notification floating window"
         },
-        "todolist.reminder.width": {
+        "todolist.floatwin.width": {
           "type": "number",
           "default": 30,
           "description": "width of notification floating window"
         },
-        "todolist.reminder.notify": {
+        "todolist.notify": {
           "type": "string",
           "default": "floating",
           "description": "how to notify you",

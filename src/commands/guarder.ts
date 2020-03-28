@@ -1,4 +1,4 @@
-import { workspace, WorkspaceConfiguration, Neovim, events } from 'coc.nvim'
+import { workspace, Neovim, events } from 'coc.nvim'
 import { TodoItem, Notification } from '../types'
 import DB from '../util/db'
 import FloatWindow from '../ui/floatWindow'
@@ -7,36 +7,29 @@ import { Dispose } from '../util/dispose'
 
 export default class Guarder extends Dispose {
   private interval: NodeJS.Timeout
-  private config: WorkspaceConfiguration
   private floating: FloatWindow
   private virtual: VirtualText
+  private nvim: Neovim
 
-  constructor(private nvim: Neovim, private todoList: DB) {
+  constructor(private todoList: DB, private type: string) {
     super()
-    this.config = workspace.getConfiguration('todolist.reminder')
-    workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration('todolist.reminder')) {
-        this.config = workspace.getConfiguration('todolist.reminder')
-      }
-    })
-
-    this.floating = new FloatWindow(nvim, this.config)
-    this.virtual = new VirtualText(nvim)
+    this.nvim = workspace.nvim
+    this.floating = new FloatWindow(this.nvim)
+    this.virtual = new VirtualText(this.nvim)
   }
 
   private async notify(todo: TodoItem): Promise<void> {
     const notice: Notification = {
-      title: ' 🗁  TodoList Guarder',
-      content: {
-        '🗒': todo.desc,
-        '🗓': new Date(todo.date).toLocaleString(),
-        '🕭': new Date(todo.due).toLocaleString()
-      }
+      title: 'TodoList Guarder',
+      content: [
+        todo.desc,
+        new Date(todo.date).toLocaleString(),
+        new Date(todo.due).toLocaleString()
+      ]
     }
     const msg = `TODO: ${todo.desc} ${todo.due ? 'at ' + todo.due : ''}`
-    const type = this.config.get<string>('notify', 'floating')
 
-    switch (type) {
+    switch (this.type) {
       case 'floating':
         try {
           await this.floating.start(notice)

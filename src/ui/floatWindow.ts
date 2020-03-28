@@ -1,23 +1,29 @@
 import { FloatOptions } from '@chemzqm/neovim/lib/api/types'
 import { Buffer } from '@chemzqm/neovim/lib/api/Buffer'
-import { Window, Neovim, WorkspaceConfiguration } from 'coc.nvim'
+import { Window, Neovim, workspace, WorkspaceConfiguration } from 'coc.nvim'
 import { Notification } from '../types'
 import Highlighter from 'coc.nvim/lib/model/highligher'
 
 export default class FloatWindow {
   private window: Window = null
   private windows: Window[] = []
-  // container to store fading and closing windows
+  private config: WorkspaceConfiguration
   private tempWins: Window[] = []
   private width = 30
   private height = 4
 
-  constructor(private nvim: Neovim, private config: WorkspaceConfiguration) {
+  constructor(private nvim: Neovim) {
+    this.config = workspace.getConfiguration('todolist.floatwin')
+    workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('todolist.floatwin')) {
+        this.config = workspace.getConfiguration('todolist.floatwin')
+      }
+    })
     this.width = this.config.get<number>('width', 30)
   }
 
   private async getWinConfig(): Promise<FloatOptions> {
-    const height = await this.nvim.eval('winheight(0)')
+    const height = await this.nvim.getOption('lines')
     const width = await this.nvim.getOption('columns')
 
     const winConfig: FloatOptions = {
@@ -37,12 +43,10 @@ export default class FloatWindow {
     const hl = new Highlighter()
     const margin = ' '.repeat(Math.floor((this.width - notice.title.length) / 2))
     hl.addLine(`${margin}${notice.title}`, 'Title')
-    for (const [item, detail] of Object.entries(notice.content)) {
-      hl.addLine(item, 'Keyword')
-      hl.addText(' ')
+    for (const detail of notice.content) {
+      hl.addLine('* ')
       hl.addText(detail, 'String')
     }
-
     return hl
   }
 
@@ -92,21 +96,19 @@ export default class FloatWindow {
 
     nvim.pauseNotification()
     const winblend = this.config.get<number>('winblend', 0)
-    const floatWinBg = this.config.get<string>('background')
-    if (floatWinBg) {
-      nvim.command(`hi TodoReminder guibg=${floatWinBg}`, true)
-      nvim.command(`hi FoldColumn guibg=${floatWinBg}`, true) // XXX
+    const floatwinBg = this.config.get<string>('background')
+    if (floatwinBg) {
+      nvim.command(`hi TodoGuarder guibg=${floatwinBg}`, true)
     } else {
-      nvim.command(`hi def link TodoReminder NormalFloat`, true)
-      nvim.command(`hi def link FoldColumn NormalFloat`, true) // XXX
+      nvim.command(`hi def link TodoGuarder NormalFloat`, true)
     }
+    window.setOption('winhighlight', 'NormalFloat:TodoGuarder,Normal:TodoGuarder,FoldColumn:TodoGuarder', true)
     window.setOption('number', false, true)
     window.setOption('relativenumber', false, true)
     window.setOption('cursorline', false, true)
     window.setOption('signcolumn', 'no', true)
     window.setOption('foldcolumn', 1, true)
     window.setOption('winblend', winblend, true)
-    window.setOption('winhighlight', 'Normal:TodoReminder', true)
     await nvim.resumeNotification()
 
     await this.moveUp(this.windows.concat(this.tempWins))
@@ -120,7 +122,7 @@ export default class FloatWindow {
     buf.setOption('buftype', 'nowrite', true)
 
     const renderer = await this.render(notice)
-    // here was changed here
+    // buffer was changed here
     renderer.render(buf)
     await this.create(buf)
   }

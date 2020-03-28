@@ -18,14 +18,14 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
 
 ```jsonc
 "todolist.enable": {
-    "type": "boolean",
-    "default": true,
-    "description": "whether enable this extension"
+  "type": "boolean",
+  "default": true,
+  "description": "whether enable this extension"
 },
 "todolist.maxsize": {
-    "type": "number",
-    "default": 5000,
-    "description": "maxsize of todolist"
+  "type": "number",
+  "default": 5000,
+  "description": "maxsize of todolist"
 },
 "todolist.dateFormat": {
   "type": "string",
@@ -33,35 +33,40 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
   "description": "dates format"
 },
 "todolist.autoUpload": {
-    "type": "boolean",
-    "default": false,
-    "description": "upload your todolist every day"
+  "type": "boolean",
+  "default": false,
+  "description": "upload your todolist every day"
 },
 "todolist.monitor": {
-    "type": "boolean",
-    "default": false,
-    "description": "monitor the todolist and reminder you at the time"
+  "type": "boolean",
+  "default": false,
+  "description": "monitor the todolist and remind you at the time"
 },
-"todolist.reminder.background": {
-    "type": "string",
-    "default": "",
-    "description": "notification floating window background(e.g. #000000)"
+"todolist.floatwin.background": {
+  "type": "string",
+  "default": "",
+  "description": "notification floating window background(e.g. #000000)"
 },
-"todolist.reminder.winblend": {
-    "type": "number",
-    "default": 0,
-    "description": "opacity of notification floating window"
+"todolist.floatwin.winblend": {
+  "type": "number",
+  "default": 0,
+  "description": "opacity of notification floating window"
 },
-"todolist.reminder.width": {
-    "type": "number",
-    "default": 30,
-    "description": "width of notification floating window"
+"todolist.floatwin.width": {
+  "type": "number",
+  "default": 30,
+  "description": "width of notification floating window"
 },
-"todolist.reminder.notify": {
-    "type": "string",
-    "default": "floating",
-    "description": "how to notify you",
-    "enum": ["floating", "virtual", "echo", "none"]
+"todolist.notify": {
+  "type": "string",
+  "default": "floating",
+  "description": "how to notify you",
+  "enum": [
+    "floating",
+    "virtual",
+    "echo",
+    "none"
+  ]
 }
 ```
 
