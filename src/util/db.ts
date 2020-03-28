@@ -27,7 +27,7 @@ export default class DB {
       items.pop()
     }
 
-    items.unshift({ uid: uuid(), todo: data })
+    items.unshift({ uid: uuid.v4(), todo: data })
     await writeFile(this.file, JSON.stringify(items, null, 2))
   }
 
