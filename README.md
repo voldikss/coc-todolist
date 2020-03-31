@@ -2,6 +2,8 @@
 
 Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.nvim)
 
+![](https://user-images.githubusercontent.com/20282795/61593014-d1be3780-ac0c-11e9-96cc-e3b787a27f46.png)
+
 ## Install
 
 ```
@@ -41,6 +43,11 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
   "type": "boolean",
   "default": false,
   "description": "monitor the todolist and remind you at the time"
+},
+"todolist.promptForReminder": {
+  "type": "boolean",
+  "default": true,
+  "description": "whether to ask users to set a reminder for every new todo item"
 },
 "todolist.floatwin.background": {
   "type": "string",
@@ -90,7 +97,7 @@ run `:CocList todolist` to open the todolist
 
 ## F.A.Q
 
-Q: Where are the todolist data stored?
+Q: Where is the todolist data stored?
 
 A: Normally the data is saved in `~/.config/coc/extensions/coc-todolist-data/`, but if you set `g:coc_extension_root` to another location, it will change as well
 
@@ -98,7 +105,6 @@ A: Normally the data is saved in `~/.config/coc/extensions/coc-todolist-data/`, 
 
 MIT
 
-## Screenshots
+## More Demos
 
 ![](https://user-images.githubusercontent.com/20282795/61623340-08499000-aca9-11e9-9be1-e6d951b075c2.gif)
-![](https://user-images.githubusercontent.com/20282795/61593014-d1be3780-ac0c-11e9-96cc-e3b787a27f46.png)

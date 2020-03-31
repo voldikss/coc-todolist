@@ -39,16 +39,18 @@ export default class Todoer {
     if (!desc || desc.trim() === '') return
     todo.desc = desc.trim()
 
-    const remind = await workspace.requestInput('Set a reminder for you?(y/n)')
-    if (!remind || remind.trim() === '') return
-    if (remind.trim().toLowerCase() === 'y') {
-      todo.remind = true
-      const dateFormat = config.get<string>('dateFormat')
-      let dueDate = moment().format(dateFormat)
-      dueDate = await workspace.requestInput('When to remind you', dueDate)
-      if (!dueDate || dueDate.trim() === '') return
-      const due = moment(dueDate.trim(), dateFormat).toDate().toString()
-      todo.due = due
+    if (config.get<boolean>('promptForReminder')) {
+      const remind = await workspace.requestInput('Set a reminder for you?(y/n)')
+      if (!remind || remind.trim() === '') return
+      if (remind.trim().toLowerCase() === 'y') {
+        todo.remind = true
+        const dateFormat = config.get<string>('dateFormat')
+        let dueDate = moment().format(dateFormat)
+        dueDate = await workspace.requestInput('When to remind you', dueDate)
+        if (!dueDate || dueDate.trim() === '') return
+        const due = moment(dueDate.trim(), dateFormat).toDate().toString()
+        todo.due = due
+      }
     }
     await this.todoList.add(todo)
     workspace.showMessage('New todo added')

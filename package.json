@@ -53,6 +53,11 @@
           "default": false,
           "description": "monitor the todolist and remind you at the time"
         },
+        "todolist.promptForReminder": {
+          "type": "boolean",
+          "default": true,
+          "description": "whether to ask users to set a reminder for every new todo item"
+        },
         "todolist.floatwin.background": {
           "type": "string",
           "default": "",
