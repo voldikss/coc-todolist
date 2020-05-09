@@ -3,7 +3,7 @@ import { TodoItem, GistObject } from '../types'
 import { statAsync } from '../util/io'
 import path from 'path'
 import DB from '../util/db'
-import { Gist } from '../gists'
+import { Gist } from '../service/gists'
 import TodolistInfo from '../util/info'
 import moment from 'moment'
 
