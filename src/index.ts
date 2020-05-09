@@ -82,6 +82,22 @@ export async function activate(context: ExtensionContext): Promise<void> {
   )
 
   subscriptions.push(
+    commands.registerCommand(
+      'todolist.browserOpenGist',
+      async () => {
+        const userName = await info.fetch('userName')
+        const gistId = await info.fetch('gistId')
+        if (userName && gistId) {
+          const url = `https://gist.github.com/${userName}/${gistId}`
+          nvim.call('coc#util#open_url', url, true)
+        } else {
+          workspace.showMessage('userName or gistId not found', 'error')
+        }
+      }
+    )
+  )
+
+  subscriptions.push(
     listManager.registerList(
       new TodoList(nvim, todoList)
     )

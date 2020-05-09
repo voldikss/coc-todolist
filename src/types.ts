@@ -27,4 +27,7 @@ export interface GistObject {
       content: string
     }
   }
+  owner?: {
+    login: string
+  }
 }

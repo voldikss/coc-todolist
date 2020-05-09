@@ -34,15 +34,17 @@ export default class TodolistInfo {
 
   public async exists(key: string): Promise<boolean> {
     let obj = await this.load()
-    if (typeof obj[key] == 'undefined')
+    if (typeof obj[key] == 'undefined') {
       return false
+    }
     return true
   }
 
   public async delete(key: string): Promise<void> {
     let obj = await this.load()
-    if (typeof obj[key] == 'undefined')
+    if (typeof obj[key] == 'undefined') {
       return
+    }
     delete obj[key]
     await writeFile(this.file, JSON.stringify(obj, null, 2))
   }

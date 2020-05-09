@@ -84,6 +84,7 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
 - `:CocCommand todolist.download`: download todolist from gist
 - `:CocCommand todolist.export`: export todolist as a json/yaml file
 - `:CocCommand todolist.clearNotice`: clear all notifications
+- `:CocCommand todolist.browserOpenGist`: open todolist gist in [gist.github.com](https://gist.github.com/)
 
 ## CocList
 

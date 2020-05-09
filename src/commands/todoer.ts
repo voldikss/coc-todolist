@@ -76,16 +76,21 @@ export default class Todoer {
       const todoFile = path.join(directory, 'todolist.json')
       const todoFileBak = path.join(directory, 'todolist.json.old')
       const stat = await statAsync(todoFile)
+      // backup old todolist file
       if (stat && stat.isFile()) {
         await workspace.renameFile(todoFile, todoFileBak, { overwrite: true })
       }
 
+      // update todolist
       const { content } = gist.files['todolist.json']
       if (content) {
         const todos: TodoItem[] = JSON.parse(content)
         await this.todoList.updateAll(todos)
         workspace.showMessage('Downloaded todolist from gist')
       }
+
+      // update github username
+      await this.info.push('userName', gist.owner.login)
     } else if (res.status === 404) {
       workspace.showMessage('Remote gist was not found', 'error')
       await this.info.delete('gistId')
@@ -124,6 +129,9 @@ export default class Todoer {
       if (res.status === 200) {
         workspace.showMessage('Updated gist todolist')
         await this.updateLog()
+        // update github username
+        const gist: GistObject = JSON.parse(res.responseText)
+        await this.info.push('userName', gist.owner.login)
         return
       } else if (res.status !== 404) {
         workspace.showMessage('Failed to uploaded todo gist', 'error')
@@ -140,6 +148,8 @@ export default class Todoer {
       await this.info.push('gistId', gist.id)
       workspace.showMessage('Uploaded a new todolist to gist')
       await this.updateLog()
+      // update github username
+      await this.info.push('userName', gist.owner.login)
     } else {
       workspace.showMessage('Failed to create todolist from gist', 'error')
       return
