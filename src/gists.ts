@@ -1,5 +1,6 @@
-import { xhr, XHROptions, XHRResponse } from 'request-light'
+import { xhr, XHROptions, XHRResponse, configure } from 'request-light'
 import { resolve as urljoin } from 'url'
+import { workspace } from 'coc.nvim'
 
 export class Gist {
   public token = ''
@@ -24,6 +25,11 @@ export class Gist {
       'Accept-Encoding': 'gzip, deflate',
       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
     }
+    const httpConfig = workspace.getConfiguration('http')
+    configure(
+      httpConfig.get<string>('proxy', undefined),
+      httpConfig.get<boolean>('proxyStrictSSL', undefined)
+    )
     if (this.token) headers['authorization'] = `token ${this.token}`
 
     const url = urljoin('https://api.github.com/', path)
