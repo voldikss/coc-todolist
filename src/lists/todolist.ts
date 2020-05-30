@@ -72,7 +72,7 @@ export default class TodoList extends BasicList {
   private compare(a: TodoItem, b: TodoItem): number {
     const priority = new Map<string, number>()
     priority.set('active', 1)
-    priority.set('completed', 2)
+    priority.set('archived', 2)
 
     return priority.get(a.status) - priority.get(b.status)
   }
