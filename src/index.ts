@@ -29,10 +29,10 @@ export async function activate(context: ExtensionContext): Promise<void> {
     await mkdirAsync(storagePath)
   }
 
-  const todoList = new DB(storagePath, 'todolist', maxsize)
+  const db = new DB(storagePath, 'todolist', maxsize)
   const info = new TodolistInfo(storagePath)
-  const todoer = new Todoer(todoList, info)
-  const guarder = new Guarder(todoList, type)
+  const todoer = new Todoer(db, info)
+  const guarder = new Guarder(db, type)
   subscriptions.push(guarder)
 
   if (monitor) await guarder.monitor()
@@ -45,6 +45,20 @@ export async function activate(context: ExtensionContext): Promise<void> {
       await todoer.upload()
     }
   }
+
+  // thank to weirongxu/coc-explorer
+  (async () => {
+    const rtp = (await nvim.getOption('runtimepath')) as string
+    const paths = rtp.split(',')
+    if (!paths.includes(context.extensionPath)) {
+      await nvim.command(
+        `execute 'noa set rtp^='.fnameescape('${context.extensionPath.replace(
+          /'/g,
+          "''",
+        )}')`,
+      )
+    }
+  })().catch(_e => { })
 
   subscriptions.push(
     commands.registerCommand(
@@ -76,8 +90,15 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   subscriptions.push(
     commands.registerCommand(
-      'todolist.clearRemind',
-      async () => await guarder.clearNotice()
+      'todolist.clear',
+      async () => await todoer.clear()
+    )
+  )
+
+  subscriptions.push(
+    commands.registerCommand(
+      'todolist.closeNotice',
+      async () => await guarder.closeNotice()
     )
   )
 
@@ -99,7 +120,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   subscriptions.push(
     listManager.registerList(
-      new TodoList(nvim, todoList)
+      new TodoList(nvim, db)
     )
   )
 }

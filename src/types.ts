@@ -1,11 +1,9 @@
-export type TodoStatus = 'active' | 'archived'
-
 export interface TodoItem {
-  desc: string
+  topic: string
   date: string
-  status: TodoStatus
-  remind: boolean
-  due: string | null
+  active: boolean
+  due: string
+  description: string
 }
 
 export interface TodoData {

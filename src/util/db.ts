@@ -59,4 +59,8 @@ export default class DB {
   public async dump(data: TodoData[]): Promise<void> {
     await writeFile(this.file, JSON.stringify(data, null, 2))
   }
+
+  public async clear(): Promise<void> {
+    await writeFile(this.file, JSON.stringify([], null, 2))
+  }
 }

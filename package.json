@@ -58,6 +58,11 @@
           "default": true,
           "description": "whether to ask users to set a reminder for every new todo item"
         },
+        "todolist.easyMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open a todo edit window when create/edit a todo item"
+        },
         "todolist.floatwin.background": {
           "type": "string",
           "default": "",
@@ -104,27 +109,38 @@
         "command": "todolist.export"
       },
       {
+        "title": "close notification",
+        "command": "todolist.closeNotice"
+      },
+      {
+        "title": "clear all todos",
+        "command": "todolist.clear"
+      },
+      {
         "title": "clear notification",
-        "command": "todolist.clearNotice"
+        "command": "todolist.browserOpenGist"
       }
     ]
   },
   "author": "dyzplus@gmail.com",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^13.9.5",
-    "@types/uuid": "^7.0.2",
+    "@types/js-yaml": "^3.12.4",
+    "@types/node": "^14.0.12",
+    "@types/uuid": "^8.0.0",
     "@voldikss/tsconfig": "^1.0.0",
     "@voldikss/tslint-config": "^1.0.6",
     "coc.nvim": "^0.0.77",
-    "moment": "^2.24.0",
+    "js-yaml": "^3.14.0",
+    "moment": "^2.26.0",
+    "path": "^0.12.7",
     "request-light": "^0.3.0",
     "rimraf": "^3.0.2",
-    "ts-loader": "^6.2.2",
-    "tslint": "^6.1.0",
-    "typescript": "^3.8.3",
-    "uuid": "^7.0.2",
-    "webpack": "^4.42.1",
+    "ts-loader": "^7.0.5",
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.5",
+    "uuid": "^8.1.0",
+    "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
   }
 }

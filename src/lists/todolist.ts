@@ -9,6 +9,7 @@ import {
 import { TodoItem, TodoData } from '../types'
 import DB from '../util/db'
 import moment from 'moment'
+import { createTodoEditBuffer } from '../util/helper'
 
 export default class TodoList extends BasicList {
   public readonly name = 'todolist'
@@ -16,23 +17,29 @@ export default class TodoList extends BasicList {
   public readonly defaultAction = 'toggle'
   public actions: ListAction[] = []
 
-  constructor(protected nvim: Neovim, private todoList: DB) {
+  constructor(protected nvim: Neovim, private db: DB) {
     super(nvim)
 
     this.addAction('toggle', async (item: ListItem) => {
       const { todo, uid } = item.data as TodoData
-      const { status } = todo
-      if (status === 'active') {
-        todo.status = 'archived'
-      } else if (status === 'archived') {
-        todo.status = 'active'
+      const { active } = todo
+      if (active) {
+        todo.active = false
+      } else {
+        todo.active = true
       }
-      await this.todoList.update(uid, todo)
+      await this.db.update(uid, todo)
     }, { persist: true, reload: true })
 
     this.addAction('preview', async (item: ListItem, context) => {
       const { todo } = item.data as TodoData
-      const lines = Object.keys(todo).map(key => `${key}: ${todo[key]}`)
+      const lines = []
+      lines.push(`Topic: ${todo.topic}`)
+      lines.push(`Date: ${todo.date}`)
+      lines.push(`Active: ${todo.active}`)
+      lines.push(`Due: ${todo.due}`)
+      lines.push(`Description:`)
+      lines.push(...todo.description.split('\n'))
       await this.preview({
         bufname: 'todolist',
         sketch: true,
@@ -45,52 +52,51 @@ export default class TodoList extends BasicList {
       const { uid } = item.data as TodoData
       const todo = item.data.todo
       const config = workspace.getConfiguration('todolist')
-      const desc = await workspace.requestInput('Input new description', todo.desc)
-      if (!desc || desc.trim() === '') return
-      todo.desc = desc.trim()
-
-      const remind = await workspace.requestInput('Set a reminder for you?(y/n)')
-      if (!remind || remind.trim() === '') return
-      if (remind.trim().toLowerCase() === 'y') {
-        todo.remind = true
-        const dateFormat = config.get<string>('dateFormat')
-        let dueDate = moment().format(dateFormat)
-        dueDate = await workspace.requestInput('When to remind you', dueDate)
-        if (!dueDate || dueDate.trim() === '') return
-        const due = moment(dueDate.trim(), dateFormat).toDate().toString()
-        todo.due = due
+      if (!config.get<boolean>('easyMode')) {
+        await createTodoEditBuffer(todo, this.db, 'update', uid)
+        return
       }
-      await this.todoList.update(uid, todo)
+      const topic = await workspace.requestInput('Input new topic', todo.topic)
+      if (!topic || topic.trim() === '') return
+      todo.topic = topic.trim()
+      if (config.get<boolean>('promptForReminder')) {
+        const remind = await workspace.requestInput('Set a due date?(y/N)')
+        if (!remind || remind.trim() === '') return
+        if (remind.trim().toLowerCase() === 'y') {
+          const dateFormat = config.get<string>('dateFormat')
+          let dueDate = moment().format(dateFormat)
+          dueDate = await workspace.requestInput('When to remind you', dueDate)
+          if (!dueDate || dueDate.trim() === '') return
+          todo.due = moment(dueDate.trim(), dateFormat).toDate().toString()
+        }
+      }
+      await this.db.update(uid, todo)
+      workspace.showMessage('Todo item updated')
     })
 
     this.addAction('delete', async (item: ListItem) => {
       const { uid } = item.data as TodoData
-      await this.todoList.delete(uid)
+      await this.db.delete(uid)
     }, { persist: true, reload: true })
   }
 
   private compare(a: TodoItem, b: TodoItem): number {
-    const priority = new Map<string, number>()
-    priority.set('active', 1)
-    priority.set('archived', 2)
-
-    return priority.get(a.status) - priority.get(b.status)
+    const priority = new Map<boolean, number>()
+    priority.set(true, 1)
+    priority.set(false, 2)
+    return priority.get(a.active) - priority.get(b.active)
   }
 
   public async loadItems(_context: ListContext): Promise<ListItem[]> {
-    const arr = await this.todoList.load()
+    const arr = await this.db.load()
     let res: ListItem[] = []
     for (const item of arr) {
-      let { desc, status } = item.todo
-      const icon = {
-        active: '[*]',
-        archived: '[√]',
-      }
-      const shortcut = icon[status]
-      let label = `${shortcut} ${desc}`
+      let { topic, active } = item.todo
+      const shortcut = active ? '[*]' : '[√]'
+      let label = `${shortcut} ${topic}`
       res.push({
         label,
-        filterText: desc + status,
+        filterText: topic,
         data: Object.assign({}, item)
       })
     }

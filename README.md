@@ -13,7 +13,7 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
 ## Features
 
 - Allow to set a reminder for a todo item
-- Auto sync your todolist with gist(require github token once: [click here to generate](https://github.com/settings/tokens/new?scopes=gist&description=coc-todolist%20gist))
+- Auto sync your todolist with gist(require github token: [click here to generate](https://github.com/settings/tokens/new?scopes=gist&description=coc-todolist%20gist))
 - Manage your todolist using CocList
 
 ## Configuration
@@ -49,6 +49,11 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
   "default": true,
   "description": "whether to ask users to set a reminder for every new todo item"
 },
+"todolist.easyMode": {
+  "type": "boolean",
+  "default": false,
+  "description": "Open a todo edit window when create/edit a todo item"
+},
 "todolist.floatwin.background": {
   "type": "string",
   "default": "",
@@ -83,7 +88,8 @@ Todolist/task manager extension for [coc.nvim](https://github.com/neoclide/coc.n
 - `:CocCommand todolist.upload`: upload todolist to gist
 - `:CocCommand todolist.download`: download todolist from gist
 - `:CocCommand todolist.export`: export todolist as a json/yaml file
-- `:CocCommand todolist.clearNotice`: clear all notifications
+- `:CocCommand todolist.closeNotice`: close notifications
+- `:CocCommand todolist.clear`: clear all todos
 - `:CocCommand todolist.browserOpenGist`: open todolist gist in [gist.github.com](https://gist.github.com/)
 
 ## CocList
@@ -92,7 +98,7 @@ run `:CocList todolist` to open the todolist
 
 - Filter your todo items and perform operations via `<Tab>`
 - Use `toggle` to toggle todo status between `active` and `completed`
-- Use `edit` to edit the description of a todo item
+- Use `edit` to edit a todo item
 - Use `preview` to preview a todo item
 - Use `delete` to delete a todo item
 
@@ -108,4 +114,5 @@ MIT
 
 ## More Demos
 
+![](https://user-images.githubusercontent.com/20282795/84150252-2d4b1b00-aa94-11ea-8701-b0be44f5d507.png)
 ![](https://user-images.githubusercontent.com/20282795/61623340-08499000-aca9-11e9-9be1-e6d951b075c2.gif)

@@ -6,11 +6,12 @@ import DB from '../util/db'
 import { Gist } from '../service/gists'
 import TodolistInfo from '../util/info'
 import moment from 'moment'
+import { newTodo, createTodoEditBuffer } from '../util/helper'
 
 export default class Todoer {
   private gist: Gist
 
-  constructor(private todoList: DB, private info: TodolistInfo) {
+  constructor(private db: DB, private info: TodolistInfo) {
     this.gist = new Gist()
   }
 
@@ -26,33 +27,27 @@ export default class Todoer {
   }
 
   public async create(): Promise<void> {
-    const todo: TodoItem = {
-      desc: '',
-      date: new Date().toString(),
-      status: 'active',
-      remind: false,
-      due: null
-    }
+    const todo = newTodo()
     const config = workspace.getConfiguration('todolist')
-
-    let desc = await workspace.requestInput('Describe what to do')
-    if (!desc || desc.trim() === '') return
-    todo.desc = desc.trim()
-
+    if (!config.get<boolean>('easyMode')) {
+      await createTodoEditBuffer(todo, this.db, 'create')
+      return
+    }
+    const topic = await workspace.requestInput('Input the topic')
+    if (!topic || topic.trim() === '') return
+    todo.topic = topic.trim()
     if (config.get<boolean>('promptForReminder')) {
-      const remind = await workspace.requestInput('Set a reminder for you?(y/n)')
+      const remind = await workspace.requestInput('Set a due date?(y/N)')
       if (!remind || remind.trim() === '') return
       if (remind.trim().toLowerCase() === 'y') {
-        todo.remind = true
         const dateFormat = config.get<string>('dateFormat')
         let dueDate = moment().format(dateFormat)
         dueDate = await workspace.requestInput('When to remind you', dueDate)
         if (!dueDate || dueDate.trim() === '') return
-        const due = moment(dueDate.trim(), dateFormat).toDate().toString()
-        todo.due = due
+        todo.due = moment(dueDate.trim(), dateFormat).toDate().toString()
       }
     }
-    await this.todoList.add(todo)
+    await this.db.add(todo)
     workspace.showMessage('New todo added')
   }
 
@@ -85,7 +80,7 @@ export default class Todoer {
       const { content } = gist.files['todolist.json']
       if (content) {
         const todos: TodoItem[] = JSON.parse(content)
-        await this.todoList.updateAll(todos)
+        await this.db.updateAll(todos)
         workspace.showMessage('Downloaded todolist from gist')
       }
 
@@ -107,7 +102,7 @@ export default class Todoer {
 
     this.gist.token = await this.getGitHubToken() // TODO
 
-    const record = await this.todoList.load()
+    const record = await this.db.load()
     const todo = record.map(i => i.todo)
     const gistObj: GistObject = {
       description: 'coc-todolist gist',
@@ -164,7 +159,7 @@ export default class Todoer {
 
   public async export(): Promise<void> {
     const { nvim } = workspace
-    const arr = await this.todoList.load()
+    const arr = await this.db.load()
     const todo = arr.map(a => a.todo)
     const filetype = await nvim.call('confirm', ['Export filetype:', '&JSON\n&YAML'])
 
@@ -184,5 +179,10 @@ export default class Todoer {
     } else {
       return
     }
+  }
+
+  public async clear(): Promise<void> {
+    await this.db.clear()
+    workspace.showMessage('All todos were cleared')
   }
 }

@@ -22,12 +22,12 @@ export default class Guarder extends Dispose {
     const notice: Notification = {
       title: 'TodoList Guarder',
       content: [
-        todo.desc,
+        todo.topic,
         new Date(todo.date).toLocaleString(),
         new Date(todo.due).toLocaleString()
       ]
     }
-    const msg = `TODO: ${todo.desc} ${todo.due ? 'at ' + todo.due : ''}`
+    const msg = `TODO: ${todo.topic} ${todo.due ? 'at ' + todo.due : ''}`
 
     switch (this.type) {
       case 'floating':
@@ -62,7 +62,7 @@ export default class Guarder extends Dispose {
   }
 
   public async deactive(uid: string, todo: TodoItem): Promise<void> {
-    todo.status = 'archived'
+    todo.active = false
     await this.todoList.update(uid, todo)
   }
 
@@ -73,8 +73,8 @@ export default class Guarder extends Dispose {
       const now = new Date().getTime()
       for (const a of todolist) {
         const { todo, uid } = a
-        const { due, status, remind } = todo
-        if (remind && due && Date.parse(due) <= now && status == 'active') {
+        const { due, active } = todo
+        if (due && Date.parse(due) <= now && active) {
           await this.notify(todo)
           await this.deactive(uid, todo)
         }
@@ -82,7 +82,7 @@ export default class Guarder extends Dispose {
     }, 1000) // TODO
   }
 
-  public async clearNotice(): Promise<void> {
+  public async closeNotice(): Promise<void> {
     await this.floating.destroy()
     await this.virtual.destroy()
   }
@@ -93,7 +93,7 @@ export default class Guarder extends Dispose {
 
   public dispose(): void {
     // tslint:disable-next-line: no-floating-promises
-    this.clearNotice()
+    this.closeNotice()
     this.stopGuard()
   }
 }
