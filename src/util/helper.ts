@@ -110,17 +110,19 @@ export async function createTodoEditBuffer(
       return
     }
     const document = workspace.getDocument(bufnr)
-    const lines = document.content
-    const todo = parseTodo(lines)
-    if (this.isValid(todo)) {
-      if (action == 'create') {
-        await db.add(todo)
-        workspace.showMessage('New todo added')
-      } else {
-        await db.update(uid, todo)
-        workspace.showMessage('Todo item updated')
+    if (document) {
+      const lines = document.content
+      const todo = parseTodo(lines)
+      if (this.isValid(todo)) {
+        if (action == 'create') {
+          await db.add(todo)
+          workspace.showMessage('New todo added')
+        } else {
+          await db.update(uid, todo)
+          workspace.showMessage('Todo item updated')
+        }
+        alreadyAdded = true
       }
-      alreadyAdded = true
     }
   })
   workspace.onDidChangeTextDocument(() => {
