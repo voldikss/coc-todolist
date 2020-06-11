@@ -91,9 +91,9 @@ export default class TodoList extends BasicList {
     const arr = await this.db.load()
     let res: ListItem[] = []
     for (const item of arr) {
-      let { topic, active } = item.todo
+      const { topic, active, description } = item.todo
       const shortcut = active ? '[*]' : '[√]'
-      let label = `${shortcut} ${topic}`
+      const label = `${shortcut} ${topic} \t ${description ? description : ''}`
       res.push({
         label,
         filterText: topic,
@@ -107,10 +107,12 @@ export default class TodoList extends BasicList {
   public doHighlight(): void {
     const { nvim } = this
     nvim.pauseNotification()
-    nvim.command('syn match TodoIcon /\\v\\[.\\]/', true)
-    nvim.command('syn match TodoDesc /\\v%4v.*$/', true)
-    nvim.command('hi def link TodoIcon Constant', true)
-    nvim.command('hi def link TodoDesc String', true)
+    nvim.command('syn match CocTodolistStatus /\\v\\[.\\]/', true)
+    nvim.command('syn match CocTodolistTopic /\\v%4v.*\\t/', true)
+    nvim.command('syn match CocTodolistDescription /.*/ contains=CocTodolistStatus,CocTodolistTopic', true)
+    nvim.command('hi def link CocTodolistStatus Constant', true)
+    nvim.command('hi def link CocTodolistTopic String', true)
+    nvim.command('hi def link CocTodolistDescription Comment', true)
     nvim.resumeNotification().catch(_e => {
       // nop
     })
