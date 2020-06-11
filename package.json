@@ -19,7 +19,7 @@
     "clean": "rimraf lib",
     "watch": "webpack --watch",
     "build": "webpack",
-    // "prepare": "npx npm-run-all clean build"
+    "prepare": "npx npm-run-all clean build"
   },
   "activationEvents": [
     "*"
