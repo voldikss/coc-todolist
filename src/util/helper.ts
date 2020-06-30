@@ -130,5 +130,6 @@ export async function createTodoEditBuffer(
   })
   workspace.onDidChangeTextDocument(() => {
     bufChanged = true
+    alreadyAdded = false
   })
 }
