@@ -29,7 +29,7 @@ export function parseTodo(text: string): TodoItem {
       todo.due = line.substr(13).trim()
     } else if (/__DESCRIPTION__/.test(line)) {
       todo.description = ''
-    } else if (!(/───────/.test(line)) && line.trim().length > 0) {
+    } else if (!(/───────/.test(line))) {
       todo.description += line + '\n'
     }
   }
