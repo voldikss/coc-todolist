@@ -55,7 +55,7 @@ export function drawTodo(todo: TodoItem, width: number): string[] {
   res.push(bot)
   res.push(` __DESCRIPTION__`)
   res.push(com)
-  res.push(todo.description.trim())
+  res.push(...todo.description.trim().split('\n'))
   res.push(com)
   return res
 }
@@ -100,6 +100,9 @@ export async function createTodoEditBuffer(
   await nvim.command('normal! A')
   alreadyAdded = false
 
+  // @todo
+  // use coc's runCommand
+  // https://github.com/neoclide/coc.nvim/issues/2054
   events.on('BufWriteCmd', async () => {
     if (alreadyAdded) {
       workspace.showMessage('Todo item already added', 'warning')
