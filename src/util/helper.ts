@@ -55,7 +55,7 @@ export function drawTodo(todo: TodoItem, width: number): string[] {
   res.push(bot)
   res.push(` __DESCRIPTION__`)
   res.push(com)
-  res.push(``)
+  res.push(todo.description.trim())
   res.push(com)
   return res
 }
