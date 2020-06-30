@@ -1,6 +1,6 @@
 {
   "name": "coc-todolist",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "todolist/task manager extension for coc.nvim",
   "main": "lib/index.js",
   "repository": {
@@ -18,8 +18,7 @@
   "scripts": {
     "clean": "rimraf lib",
     "watch": "webpack --watch",
-    "build": "webpack",
-    "prepare": "npx npm-run-all clean build"
+    "build": "webpack"
   },
   "activationEvents": [
     "*"
