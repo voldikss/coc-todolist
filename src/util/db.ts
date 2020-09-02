@@ -1,4 +1,4 @@
-import { statAsync, writeFile, readFile } from './io'
+import { statAsync, writeFileAsync, readFileAsync } from './io'
 import path from 'path'
 import { TodoItem, TodoData } from '../types'
 import uuid = require('uuid')
@@ -17,7 +17,7 @@ export default class DB {
   public async load(): Promise<TodoData[]> {
     let stat = await statAsync(this.file)
     if (!stat || !stat.isFile()) return []
-    let content = await readFile(this.file)
+    let content = await readFileAsync(this.file)
     return JSON.parse(content) as TodoData[]
   }
 
@@ -28,7 +28,7 @@ export default class DB {
     }
 
     items.unshift({ uid: uuid.v4(), todo: data })
-    await writeFile(this.file, JSON.stringify(items, null, 2))
+    await writeFileAsync(this.file, JSON.stringify(items, null, 2))
   }
 
   public async delete(uid: string): Promise<void> {
@@ -36,7 +36,7 @@ export default class DB {
     let idx = items.findIndex(o => o.uid == uid)
     if (idx !== -1) {
       items.splice(idx, 1)
-      await writeFile(this.file, JSON.stringify(items, null, 2))
+      await writeFileAsync(this.file, JSON.stringify(items, null, 2))
     }
   }
 
@@ -45,22 +45,22 @@ export default class DB {
     let idx = items.findIndex(o => o.uid == uid)
     if (idx !== -1) {
       items[idx].todo = data
-      await writeFile(this.file, JSON.stringify(items, null, 2))
+      await writeFileAsync(this.file, JSON.stringify(items, null, 2))
     }
   }
 
   public async updateAll(data: TodoItem[]): Promise<void> {
-    await writeFile(this.file, '[]')
+    await writeFileAsync(this.file, '[]')
     for (const t of data) {
       await this.add(t)
     }
   }
 
   public async dump(data: TodoData[]): Promise<void> {
-    await writeFile(this.file, JSON.stringify(data, null, 2))
+    await writeFileAsync(this.file, JSON.stringify(data, null, 2))
   }
 
   public async clear(): Promise<void> {
-    await writeFile(this.file, JSON.stringify([], null, 2))
+    await writeFileAsync(this.file, JSON.stringify([], null, 2))
   }
 }

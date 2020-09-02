@@ -1,4 +1,4 @@
-import { readFile, statAsync, writeFile } from './io'
+import { readFileAsync, statAsync, writeFileAsync } from './io'
 import fs from 'fs'
 import path from 'path'
 
@@ -11,15 +11,15 @@ export default class TodolistInfo {
   public async load(): Promise<object> {
     let stat = await statAsync(this.file)
     if (!stat || !stat.isFile()) {
-      await writeFile(this.file, '{}')
+      await writeFileAsync(this.file, '{}')
       return {}
     }
 
     try {
-      let content = await readFile(this.file)
+      let content = await readFileAsync(this.file)
       return JSON.parse(content)
     } catch (e) {
-      await writeFile(this.file, '{}')
+      await writeFileAsync(this.file, '{}')
       return {}
     }
   }
@@ -46,19 +46,19 @@ export default class TodolistInfo {
       return
     }
     delete obj[key]
-    await writeFile(this.file, JSON.stringify(obj, null, 2))
+    await writeFileAsync(this.file, JSON.stringify(obj, null, 2))
   }
 
   public async push(key: string, data: number | null | boolean | string): Promise<void> {
     let obj = await this.load()
     obj[key] = data
-    await writeFile(this.file, JSON.stringify(obj, null, 2))
+    await writeFileAsync(this.file, JSON.stringify(obj, null, 2))
   }
 
   public async clear(): Promise<void> {
     let stat = await statAsync(this.file)
     if (!stat || !stat.isFile()) return
-    await writeFile(this.file, '{}')
+    await writeFileAsync(this.file, '{}')
   }
 
   public destroy(): void {
