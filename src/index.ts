@@ -4,7 +4,7 @@ import {
   listManager,
   workspace
 } from 'coc.nvim'
-import { mkdirAsync, statAsync } from './util/io'
+import { fsMkdir, fsStat } from './util/fs'
 import TodoList from './lists/todolist'
 import Todoer from './commands/todoer'
 import DB from './util/db'
@@ -24,9 +24,9 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const { subscriptions, storagePath } = context
   const { nvim } = workspace
 
-  const stat = await statAsync(storagePath)
+  const stat = await fsStat(storagePath)
   if (!stat || !stat.isDirectory()) {
-    await mkdirAsync(storagePath)
+    await fsMkdir(storagePath)
   }
 
   const db = new DB(storagePath, 'todolist', maxsize)

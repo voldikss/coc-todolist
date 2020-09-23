@@ -1,6 +1,6 @@
 import { workspace } from 'coc.nvim'
 import { TodoItem, GistObject } from '../types'
-import { statAsync } from '../util/io'
+import { fsStat } from '../util/fs'
 import path from 'path'
 import DB from '../util/db'
 import { Gist } from '../service/gists'
@@ -70,7 +70,7 @@ export default class Todoer {
       const gist: GistObject = JSON.parse(res.responseText)
       const todoFile = path.join(directory, 'todolist.json')
       const todoFileBak = path.join(directory, 'todolist.json.old')
-      const stat = await statAsync(todoFile)
+      const stat = await fsStat(todoFile)
       // backup old todolist file
       if (stat && stat.isFile()) {
         await workspace.renameFile(todoFile, todoFileBak, { overwrite: true })
