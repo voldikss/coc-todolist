@@ -10,7 +10,7 @@ export default class TodolistInfo {
 
   public async load(): Promise<object> {
     let stat = await fsStat(this.file)
-    if (!stat || !stat.isFile()) {
+    if (!(stat.isFile())) {
       await fsWriteFile(this.file, '{}')
       return {}
     }
@@ -57,7 +57,7 @@ export default class TodolistInfo {
 
   public async clear(): Promise<void> {
     let stat = await fsStat(this.file)
-    if (!stat || !stat.isFile()) return
+    if (!(stat.isFile())) return
     await fsWriteFile(this.file, '{}')
   }
 

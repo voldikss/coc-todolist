@@ -16,10 +16,10 @@ export default class Todoer {
   }
 
   private async getGitHubToken(): Promise<string> {
-    let token = await this.info.fetch('userToken')
+    let token: string = await this.info.fetch('userToken')
     if (!token) {
       token = await workspace.requestInput('Input github token')
-      if (!token || token.trim() === '') return
+      if (!(token?.trim().length > 0)) return
       token = token.trim()
       await this.info.push('userToken', token)
     }
@@ -34,16 +34,15 @@ export default class Todoer {
       return
     }
     const topic = await workspace.requestInput('Input the topic')
-    if (!topic || topic.trim() === '') return
+    if (!(topic?.trim().length > 0)) return
     todo.topic = topic.trim()
     if (config.get<boolean>('promptForReminder')) {
       const remind = await workspace.requestInput('Set a due date?(y/N)')
-      if (!remind || remind.trim() === '') return
-      if (remind.trim().toLowerCase() === 'y') {
+      if (remind?.trim().toLowerCase() === 'y') {
         const dateFormat = config.get<string>('dateFormat')
         let dueDate = moment().format(dateFormat)
         dueDate = await workspace.requestInput('When to remind you', dueDate)
-        if (!dueDate || dueDate.trim() === '') return
+        if (!(dueDate?.trim().length > 0)) return
         todo.due = moment(dueDate.trim(), dateFormat).toDate().toString()
       }
     }
@@ -55,10 +54,10 @@ export default class Todoer {
     let statusItem = workspace.createStatusBarItem(0, { progress: true })
     statusItem.text = 'downloading todolist'
     // if gist id exists, use that to download gist
-    let gistid = await this.info.fetch('gistId')
-    if (!gistid || gistid.trim() === '') {
+    let gistid: string = await this.info.fetch('gistId')
+    if (!(gistid?.trim().length > 0)) {
       gistid = await workspace.requestInput('Input gist id')
-      if (!gistid || gistid.trim() === '') return
+      if (!(gistid?.trim().length > 0)) return
       gistid = gistid.trim()
       await this.info.push('gistId', gistid)
     }
@@ -72,7 +71,7 @@ export default class Todoer {
       const todoFileBak = path.join(directory, 'todolist.json.old')
       const stat = await fsStat(todoFile)
       // backup old todolist file
-      if (stat && stat.isFile()) {
+      if (stat?.isFile()) {
         await workspace.renameFile(todoFile, todoFileBak, { overwrite: true })
       }
 
@@ -116,8 +115,8 @@ export default class Todoer {
     const data = Buffer.from(JSON.stringify(gistObj))
 
     // If gistId exists, upload
-    let gistId = await this.info.fetch('gistId')
-    if (gistId && gistId.trim()) {
+    let gistId: string = await this.info.fetch('gistId')
+    if (gistId?.trim().length > 0) {
       statusItem.show()
       const res = await this.gist.patch(`/gists/${gistId}`, data)
       statusItem.hide()

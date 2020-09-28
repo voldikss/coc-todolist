@@ -16,7 +16,7 @@ export default class DB {
 
   public async load(): Promise<TodoData[]> {
     let stat = await fsStat(this.file)
-    if (!stat || !stat.isFile()) return []
+    if (!(stat?.isFile())) return []
     let content = await fsReadFile(this.file)
     return JSON.parse(content) as TodoData[]
   }

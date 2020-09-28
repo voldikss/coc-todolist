@@ -69,7 +69,7 @@ export default class Guarder extends Dispose {
   public async monitor(): Promise<void> {
     this.interval = setInterval(async () => {
       const todolist = await this.todoList.load()
-      if (!todolist || todolist.length === 0) return
+      if (!(todolist?.length > 0)) return
       const now = new Date().getTime()
       for (const a of todolist) {
         const { todo, uid } = a

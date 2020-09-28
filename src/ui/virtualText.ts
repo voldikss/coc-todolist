@@ -10,8 +10,9 @@ export default class VirtualText {
     if (!this.show) return
 
     const doc = workspace.getDocument(bufnr)
-    if (doc && this.virtualTextSrcId)
+    if (doc && this.virtualTextSrcId) {
       doc.buffer.clearNamespace(this.virtualTextSrcId, 0, -1)
+    }
 
     this.virtualTextSrcId = await this.nvim.createNamespace('coc-todolist')
     const buffer = await this.nvim.buffer

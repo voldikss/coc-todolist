@@ -57,16 +57,15 @@ export default class TodoList extends BasicList {
         return
       }
       const topic = await workspace.requestInput('Input new topic', todo.topic)
-      if (!topic || topic.trim() === '') return
+      if (!(topic?.trim().length > 0)) return
       todo.topic = topic.trim()
       if (config.get<boolean>('promptForReminder')) {
         const remind = await workspace.requestInput('Set a due date?(y/N)')
-        if (!remind || remind.trim() === '') return
-        if (remind.trim().toLowerCase() === 'y') {
+        if (remind?.trim().toLowerCase() === 'y') {
           const dateFormat = config.get<string>('dateFormat')
           let dueDate = moment().format(dateFormat)
           dueDate = await workspace.requestInput('When to remind you', dueDate)
-          if (!dueDate || dueDate.trim() === '') return
+          if (!(dueDate?.trim().length > 0)) return
           todo.due = moment(dueDate.trim(), dateFormat).toDate().toString()
         }
       }

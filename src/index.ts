@@ -25,7 +25,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   const { nvim } = workspace
 
   const stat = await fsStat(storagePath)
-  if (!stat || !stat.isDirectory()) {
+  if (!(stat?.isDirectory())) {
     await fsMkdir(storagePath)
   }
 
