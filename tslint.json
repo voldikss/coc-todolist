@@ -1,9 +1,0 @@
-{
-  "extends": "./node_modules/@voldikss/tslint-config/tslint.json",
-  "rules": {
-  },
-  "linterOptions": {
-    "exclude": [
-    ]
-  }
-}

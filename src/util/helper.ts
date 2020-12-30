@@ -1,72 +1,88 @@
 import { TodoItem } from "../types"
-import { workspace, events } from "coc.nvim"
+import { workspace, window } from "coc.nvim"
 import DB from "./db"
+import { bufWriteCmdListener } from "../events"
+import moment from "moment-timezone"
 
-let alreadyAdded = false
+const dateFormat = workspace.getConfiguration('todolist').get<string>('dateFormat')
+
+let todolistUpdated = false
 let bufChanged = false
 
-export function newTodo(): TodoItem {
+export function createTodo(): TodoItem {
+  const date = new Date().toString()
   return {
     topic: '',
-    date: new Date().toString(),
+    date: date,
     active: true,
-    due: '',
-    description: ''
+    due: date,
+    detail: ''
   } as TodoItem
 }
 
 export function parseTodo(text: string): TodoItem {
-  const lines = text.split('\n')
-  const todo = newTodo()
-  for (const line of lines) {
-    if (/__TOPIC__/.test(line)) {
-      todo.topic = line.substr(13).trim()
-    } else if (/__DATE__/.test(line)) {
-      todo.date = line.substr(13).trim()
-    } else if (/__ACTIVE__/.test(line)) {
-      todo.active = line.substr(13).trim() == 'true'
-    } else if (/__DUE__/.test(line)) {
-      todo.due = line.substr(13).trim()
-    } else if (/__DESCRIPTION__/.test(line)) {
-      todo.description = ''
-    } else if (!(/───────/.test(line))) {
-      todo.description += line + '\n'
+  const lines = text.trim().split('\n')
+  const todo = createTodo()
+  let flag
+  for (const line of lines.slice(3)) {
+    if (/^\s*$/.test(line)) {
+      continue
+    } else if (/─TOPIC─/.test(line)) {
+      flag = 'topic'
+    } else if (/─DETAIL─/.test(line)) {
+      flag = 'detail'
+    } else if (/─DATE─/.test(line)) {
+      flag = 'date'
+    } else if (/─DUE─/.test(line)) {
+      flag = 'due'
+    } else if (/─ACTIVE─/.test(line)) {
+      flag = 'active'
+    } else {
+      if (flag == 'topic' || flag == 'detail') {
+        todo[flag] += line.trim()
+      } else if (flag == 'date' || flag == 'due') {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        todo[flag] = moment(line.trim(), dateFormat).tz(timezone).toDate().toString()
+      } else {
+        todo[flag] = line.trim() == 'true'
+      }
     }
   }
   return todo
 }
 
 export function drawTodo(todo: TodoItem, width: number): string[] {
+  const drawBar = (title: string, width: number) => {
+    return ('─'.repeat((width - title.length) / 2) + title).padEnd(width, '─')
+  }
   const res = []
-  const com = `─────────────${'─'.repeat(width - 19)}`
-  const top = `────────────┬${'─'.repeat(width - 19)}`
-  const cen = `────────────┼${'─'.repeat(width - 19)}`
-  const bot = `────────────┴${'─'.repeat(width - 19)}`
   res.push(`Save current buffer to create/update todolist`)
-  res.push(``)
-  res.push(top)
-  res.push(` __TOPIC__  │ ${todo.topic}`)
-  res.push(cen)
-  res.push(` __DATE__   │ ${todo.date}`)
-  res.push(cen)
-  res.push(` __ACTIVE__ │ ${todo.active}`)
-  res.push(cen)
-  res.push(` __DUE__    │ ${todo.due}`)
-  res.push(bot)
-  res.push(` __DESCRIPTION__`)
-  res.push(com)
-  res.push(...todo.description.trim().split('\n'))
-  res.push(com)
+  res.push(`Notice that this buffer will be closed after saving`)
+  res.push('')
+  res.push(drawBar('ACTIVE', width))
+  res.push(todo.active)
+  res.push(drawBar('DATE', width))
+  res.push(moment(todo.date).format(dateFormat))
+  res.push(drawBar('DUE', width))
+  res.push(moment(todo.due).format(dateFormat))
+  res.push(drawBar('TOPIC', width))
+  res.push(todo.topic)
+  res.push(drawBar('DETAIL', width))
+  res.push(...todo.detail.trim().split('\n'))
   return res
 }
 
-export function isValid(todo: TodoItem): boolean {
+export function checkTodo(todo: TodoItem): boolean {
   if (todo.topic.trim() == '') {
-    workspace.showMessage('topic can not be empty', 'error')
+    window.showMessage('TOPIC can not be empty', 'error')
     return false
   }
-  if (Date.parse(todo.date).toString() == 'NaN') {
-    workspace.showMessage('error date format', 'error')
+  if (todo.date.toString() == 'NaN') {
+    window.showMessage('error on DATE format', 'error')
+    return false
+  }
+  if (todo.due.toString() == 'NaN') {
+    window.showMessage('error on DUE format', 'error')
     return false
   }
   return true
@@ -80,56 +96,50 @@ export async function createTodoEditBuffer(
 ): Promise<void> {
   const { nvim } = workspace
   await nvim.command('runtime plugin/coc_todolist.vim')
-  const openCommand = workspace.getConfiguration('refactor').get('openCommand') as string
   nvim.pauseNotification()
-  nvim.command(`${openCommand} __coc_todolist__`, true)
+  nvim.command(`vs __coc_todolist__`, true)
   nvim.command(`setl filetype=coc_todolist buftype=acwrite nobuflisted bufhidden=wipe nofen wrap`, true)
   nvim.command(`setl undolevels=1000 nolist nospell noswapfile nomod conceallevel=2 concealcursor=n`, true)
-  nvim.command('setl nomod', true)
-  const [, err] = await nvim.resumeNotification()
-  if (err) {
-    logger.error(err)
-    workspace.showMessage(`Error on open todoedit window: ${err}`, 'error')
-    return
-  }
-  const [bufnr, width] = await nvim.eval('[bufnr("%"), winwidth(0)]') as [number, number]
+  nvim.command('setl nomod nonumber norelativenumber signcolumn=yes:1', true)
+  await nvim.resumeNotification()
+
+  const [bufnr, width] = await nvim.call('coc_todolist#get_buf_info') as [number, number]
   const lines = drawTodo(todo, width)
   await nvim.call('append', [0, lines])
   await nvim.command('normal! Gdd')
-  await nvim.call('cursor', [4, 0])
-  await nvim.command('normal! A')
-  alreadyAdded = false
+  await nvim.call('search', ['TOPIC', 'b'])
+  await nvim.command('normal! j')
+  await nvim.command('normal! I')
+  todolistUpdated = false
 
-  // @todo
-  // use coc's runCommand
-  // https://github.com/neoclide/coc.nvim/issues/2054
-  events.on('BufWriteCmd', async () => {
-    if (alreadyAdded) {
-      workspace.showMessage('Todo item already added', 'warning')
+  bufWriteCmdListener.on(async () => {
+    if (todolistUpdated) {
+      window.showMessage('Todo item already added', 'warning')
       return
     }
     if (!bufChanged) {
-      workspace.showMessage('No changes', 'warning')
+      window.showMessage('No changes', 'warning')
       return
     }
     const document = workspace.getDocument(bufnr)
     if (document) {
       const lines = document.content
       const todo = parseTodo(lines)
-      if (this.isValid(todo)) {
+      if (checkTodo(todo)) {
         if (action == 'create') {
           await db.add(todo)
-          workspace.showMessage('New todo added')
+          window.showMessage('New todo added')
         } else {
           await db.update(uid, todo)
-          workspace.showMessage('Todo item updated')
+          window.showMessage('Todo item updated')
         }
-        alreadyAdded = true
+        todolistUpdated = true
+        nvim.command('close!')
       }
     }
   })
   workspace.onDidChangeTextDocument(() => {
     bufChanged = true
-    alreadyAdded = false
+    todolistUpdated = false
   })
 }

@@ -1,22 +1,22 @@
-import { fsReadFile, fsStat, fsWriteFile } from './fs'
+import { fsReadFile, fsStat, fsWriteFile } from './util/fs'
 import fs from 'fs'
 import path from 'path'
 
-export default class TodolistInfo {
+export default class Profile {
   private file: string
   constructor(directory: string) {
     this.file = path.join(directory, 'config.json')
   }
 
-  public async load(): Promise<object> {
-    let stat = await fsStat(this.file)
-    if (!(stat.isFile())) {
+  public async load(): Promise<Record<string, any>> {
+    const stat = await fsStat(this.file)
+    if (!(stat?.isFile())) {
       await fsWriteFile(this.file, '{}')
       return {}
     }
 
     try {
-      let content = await fsReadFile(this.file)
+      const content = await fsReadFile(this.file)
       return JSON.parse(content)
     } catch (e) {
       await fsWriteFile(this.file, '{}')
@@ -25,7 +25,7 @@ export default class TodolistInfo {
   }
 
   public async fetch(key: string): Promise<any> {
-    let obj = await this.load()
+    const obj = await this.load()
     if (typeof obj[key] == 'undefined') {
       return undefined
     }
@@ -33,7 +33,7 @@ export default class TodolistInfo {
   }
 
   public async exists(key: string): Promise<boolean> {
-    let obj = await this.load()
+    const obj = await this.load()
     if (typeof obj[key] == 'undefined') {
       return false
     }
@@ -41,7 +41,7 @@ export default class TodolistInfo {
   }
 
   public async delete(key: string): Promise<void> {
-    let obj = await this.load()
+    const obj = await this.load()
     if (typeof obj[key] == 'undefined') {
       return
     }
@@ -50,14 +50,14 @@ export default class TodolistInfo {
   }
 
   public async push(key: string, data: number | null | boolean | string): Promise<void> {
-    let obj = await this.load()
+    const obj = await this.load()
     obj[key] = data
     await fsWriteFile(this.file, JSON.stringify(obj, null, 2))
   }
 
   public async clear(): Promise<void> {
-    let stat = await fsStat(this.file)
-    if (!(stat.isFile())) return
+    const stat = await fsStat(this.file)
+    if (!(stat?.isFile())) return
     await fsWriteFile(this.file, '{}')
   }
 

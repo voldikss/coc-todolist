@@ -3,7 +3,7 @@ export interface TodoItem {
   date: string
   active: boolean
   due: string
-  description: string
+  detail: string
 }
 
 export interface TodoData {

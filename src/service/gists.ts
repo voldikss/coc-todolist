@@ -20,7 +20,7 @@ export class Gist {
     return await this.request('PATCH', path, data)
   }
 
-  public async request(method: string, path, data?: Buffer): Promise<XHRResponse> {
+  public async request(method: string, path: string, data?: Buffer): Promise<XHRResponse> {
     const headers = {
       'Accept-Encoding': 'gzip, deflate',
       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'

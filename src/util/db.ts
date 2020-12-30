@@ -6,34 +6,27 @@ import uuid = require('uuid')
 export default class DB {
   private file: string
 
-  constructor(
-    directory: string,
-    name: string,
-    private maxsize: number
-  ) {
+  constructor(directory: string, name: string) {
     this.file = path.join(directory, `${name}.json`)
   }
 
   public async load(): Promise<TodoData[]> {
-    let stat = await fsStat(this.file)
+    const stat = await fsStat(this.file)
     if (!(stat?.isFile())) return []
-    let content = await fsReadFile(this.file)
+    const content = await fsReadFile(this.file)
     return JSON.parse(content) as TodoData[]
   }
 
   public async add(data: TodoItem): Promise<void> {
-    let items = await this.load()
-    if (items.length == this.maxsize) {
-      items.pop()
-    }
+    const items = await this.load()
 
     items.unshift({ uid: uuid.v4(), todo: data })
     await fsWriteFile(this.file, JSON.stringify(items, null, 2))
   }
 
   public async delete(uid: string): Promise<void> {
-    let items = await this.load()
-    let idx = items.findIndex(o => o.uid == uid)
+    const items = await this.load()
+    const idx = items.findIndex(o => o.uid == uid)
     if (idx !== -1) {
       items.splice(idx, 1)
       await fsWriteFile(this.file, JSON.stringify(items, null, 2))
@@ -41,8 +34,8 @@ export default class DB {
   }
 
   public async update(uid: string, data: TodoItem): Promise<void> {
-    let items = await this.load()
-    let idx = items.findIndex(o => o.uid == uid)
+    const items = await this.load()
+    const idx = items.findIndex(o => o.uid == uid)
     if (idx !== -1) {
       items[idx].todo = data
       await fsWriteFile(this.file, JSON.stringify(items, null, 2))

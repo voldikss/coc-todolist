@@ -1,11 +1,4 @@
-import {
-  ListAction,
-  ListContext,
-  ListItem,
-  BasicList,
-  Neovim,
-  workspace,
-} from 'coc.nvim'
+import { ListAction, ListItem, BasicList, Neovim, workspace, window } from 'coc.nvim'
 import { TodoItem, TodoData } from '../types'
 import DB from '../util/db'
 import moment from 'moment'
@@ -38,8 +31,8 @@ export default class TodoList extends BasicList {
       lines.push(`Date: ${todo.date}`)
       lines.push(`Active: ${todo.active}`)
       lines.push(`Due: ${todo.due}`)
-      lines.push(`Description:`)
-      lines.push(...todo.description.split('\n'))
+      lines.push(`Detail:`)
+      lines.push(...todo.detail.split('\n'))
       await this.preview({
         bufname: 'todolist',
         sketch: true,
@@ -51,26 +44,8 @@ export default class TodoList extends BasicList {
     this.addAction('edit', async (item: ListItem) => {
       const { uid } = item.data as TodoData
       const todo = item.data.todo
-      const config = workspace.getConfiguration('todolist')
-      if (!config.get<boolean>('easyMode')) {
-        await createTodoEditBuffer(todo, this.db, 'update', uid)
-        return
-      }
-      const topic = await workspace.requestInput('Input new topic', todo.topic)
-      if (!(topic?.trim().length > 0)) return
-      todo.topic = topic.trim()
-      if (config.get<boolean>('promptForReminder')) {
-        const remind = await workspace.requestInput('Set a due date?(y/N)')
-        if (remind?.trim().toLowerCase() === 'y') {
-          const dateFormat = config.get<string>('dateFormat')
-          let dueDate = moment().format(dateFormat)
-          dueDate = await workspace.requestInput('When to remind you', dueDate)
-          if (!(dueDate?.trim().length > 0)) return
-          todo.due = moment(dueDate.trim(), dateFormat).toDate().toString()
-        }
-      }
-      await this.db.update(uid, todo)
-      workspace.showMessage('Todo item updated')
+      await createTodoEditBuffer(todo, this.db, 'update', uid)
+      return
     })
 
     this.addAction('delete', async (item: ListItem) => {
@@ -86,13 +61,13 @@ export default class TodoList extends BasicList {
     return priority.get(a.active) - priority.get(b.active)
   }
 
-  public async loadItems(_context: ListContext): Promise<ListItem[]> {
+  public async loadItems(): Promise<ListItem[]> {
     const arr = await this.db.load()
     let res: ListItem[] = []
     for (const item of arr) {
-      const { topic, active, description } = item.todo
+      const { topic, active, detail } = item.todo
       const shortcut = active ? '[*]' : '[√]'
-      const label = `${shortcut} ${topic} \t ${description ? description : ''}`
+      const label = `${shortcut} ${topic} \t ${detail ? detail : ''}`
       res.push({
         label,
         filterText: topic,
@@ -112,7 +87,7 @@ export default class TodoList extends BasicList {
     nvim.command('hi def link CocTodolistStatus Constant', true)
     nvim.command('hi def link CocTodolistTopic String', true)
     nvim.command('hi def link CocTodolistDescription Comment', true)
-    nvim.resumeNotification().catch(_e => {
+    nvim.resumeNotification().catch(() => {
       // nop
     })
   }
