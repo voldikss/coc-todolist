@@ -50,5 +50,4 @@ jobs:
               git push --tags
               echo 'tags gen'
             fi
-          else
           fi
