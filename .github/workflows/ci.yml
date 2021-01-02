@@ -14,7 +14,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12
-          registry-url: https://registry.npmjs.org/
+          registry-url: https://registry.npmjs.com/
       - name: Build Package
         run: |
           npm install -g yarn
@@ -22,7 +22,7 @@ jobs:
           yarn install
       - name: Register Token
         run: |
-          echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > /home/runner/work/_temp/.npmrc
+          echo "//registry.npmjs.com/:_authToken=$NPM_AUTH_TOKEN" > /home/runner/work/_temp/.npmrc
           echo "_auth=$NPM_AUTH_TOKEN" >>  /home/runner/work/_temp/.npmrc
           echo "email=<dyzplus@gmail.com>" >>  /home/runner/work/_temp/.npmrc
           echo "always-auth=true" >>  /home/runner/work/_temp/.npmrc
