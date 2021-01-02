@@ -13,21 +13,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: 12
-          registry-url: https://registry.npmjs.com/
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Build Package
         run: |
-          npm install -g yarn
           npm install -g json
-          yarn install
-      - name: Register Token
-        run: |
-          echo "//registry.npmjs.com/:_authToken=$NPM_AUTH_TOKEN" > /home/runner/work/_temp/.npmrc
-          echo "_auth=$NPM_AUTH_TOKEN" >>  /home/runner/work/_temp/.npmrc
-          echo "email=<dyzplus@gmail.com>" >>  /home/runner/work/_temp/.npmrc
-          echo "always-auth=true" >>  /home/runner/work/_temp/.npmrc
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          npm install
       - name: Publish and Tag
         run: |
           pkgname=$(json name < package.json)
