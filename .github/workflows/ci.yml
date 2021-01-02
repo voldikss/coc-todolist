@@ -38,14 +38,17 @@ jobs:
           echo ${localversion}
           echo ${remoteversion}
 
-          if [ ${localversion}=$remoteversion ]
+          if [ ${localversion} != $remoteversion ]
           then
-            echo 'not equal, publish!'
-            # npm publish
+            npm publish
+            echo 'publish'
+            if [ $? = 0 ]
+            then
+              git config user.name github-actions
+              git config user.email github-actions@github.com
+              git tag -a v${localversion} -m ${localversion}
+              git push --tags
+              echo 'tags gen'
+            fi
           else
-            git config user.name github-actions
-            git config user.email github-actions@github.com
-            git tag -a v${localversion} -m ${localversion}
-            git push --tags
-            echo 'equal, no publish'
           fi
