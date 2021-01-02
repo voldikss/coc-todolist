@@ -28,20 +28,24 @@ jobs:
           echo "always-auth=true" >>  /home/runner/work/_temp/.npmrc
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-      - name: Npm Publish
+      - name: Publish and Tag
         run: |
           pkgname=$(json name < package.json)
-          if [ $(npm view ${pkgname} version)!=$(json version < package.json) ]
+          localversion=$(json version < package.json)
+          remoteversion=$(npm view ${pkgname} version)
+
+          echo ${pkgname}
+          echo ${localversion}
+          echo ${remoteversion}
+
+          if [ ${localversion}=$remoteversion ]
           then
             echo 'not equal, publish!'
             # npm publish
           else
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git tag -a v${localversion} -m ${localversion}
+            git push --tags
             echo 'equal, no publish'
           fi
-      - name: Tag
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          pkgversion=$(json version < package.json)
-          git tag -a v${pkgversion} -m ${pkgversion}
-          git push --tags
