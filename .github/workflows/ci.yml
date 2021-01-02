@@ -1,9 +1,9 @@
-name: Publish and Tag
+name: publish
 
 on: push
 
 jobs:
-  publish-and-tag:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,7 +16,7 @@ jobs:
         run: |
           npm install -g json
           npm install
-      - name: Publish and Tag
+      - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -24,11 +24,14 @@ jobs:
           localversion=$(json version < package.json)
           remoteversion=$(npm view ${pkgname} version)
 
-          if [ ${localversion} != $remoteversion ]
+          echo ${localversion}
+          echo ${remoteversion}
+
+          if [ ${localversion} \> ${remoteversion} ]
           then
             npm publish
             git config user.name github-actions
             git config user.email github-actions@github.com
-            git tag -a v${localversion} -m ${localversion}
+            git tag -a ${localversion} -m v${localversion}
             git push --tags
           fi

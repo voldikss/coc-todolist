@@ -1,5 +1,8 @@
 # coc-todolist
 
+![publish](https://github.com/voldikss/coc-todolist/workflows/publish/badge.svg)
+[![npm version](https://badge.fury.io/js/coc-todolist.svg)](https://badge.fury.io/js/coc-todolist)
+
 Todolist manager extension for [coc.nvim](https://github.com/neoclide/coc.nvim)
 
 ![](https://user-images.githubusercontent.com/20282795/61593014-d1be3780-ac0c-11e9-96cc-e3b787a27f46.png)
