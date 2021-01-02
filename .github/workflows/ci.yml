@@ -1,0 +1,34 @@
+name: Publish and Tag
+
+on: push
+
+jobs:
+  publish-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Build Package
+        run: |
+          npm install -g json
+          npm install
+      - name: Publish and Tag
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          pkgname=$(json name < package.json)
+          localversion=$(json version < package.json)
+          remoteversion=$(npm view ${pkgname} version)
+
+          if [ ${localversion} != $remoteversion ]
+          then
+            npm publish
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git tag -a v${localversion} -m ${localversion}
+            git push --tags
+          fi
