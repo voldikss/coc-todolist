@@ -27,6 +27,7 @@ jobs:
           localversion=$(json version < package.json)
           remoteversion=$(npm view ${pkgname} version)
 
+          cat ~/.npmrc
           echo ${pkgname}
           echo ${localversion}
           echo ${remoteversion}
