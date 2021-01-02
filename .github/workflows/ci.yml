@@ -27,7 +27,7 @@ jobs:
           localversion=$(json version < package.json)
           remoteversion=$(npm view ${pkgname} version)
 
-          cat ~/.npmrc
+          cat /home/runner/work/_temp/.npmrc
           echo ${pkgname}
           echo ${localversion}
           echo ${remoteversion}
@@ -36,12 +36,9 @@ jobs:
           then
             npm publish
             echo 'publish'
-            if [ $? = 0 ]
-            then
-              git config user.name github-actions
-              git config user.email github-actions@github.com
-              git tag -a v${localversion} -m ${localversion}
-              git push --tags
-              echo 'tags gen'
-            fi
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git tag -a v${localversion} -m ${localversion}
+            git push --tags
+            echo 'tags gen'
           fi
