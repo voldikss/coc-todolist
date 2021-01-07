@@ -1,8 +1,8 @@
-import { fsReadFile, fsStat, fsWriteFile } from './util/fs'
+import { fsReadFile, fsStat, fsWriteFile } from './fs'
 import fs from 'fs'
 import path from 'path'
 
-export default class Profile {
+export default class GistConfig {
   private file: string
   constructor(directory: string) {
     this.file = path.join(directory, 'config.json')

@@ -6,8 +6,8 @@ import uuid = require('uuid')
 export default class DB {
   private file: string
 
-  constructor(directory: string, name: string) {
-    this.file = path.join(directory, `${name}.json`)
+  constructor(directory: string) {
+    this.file = path.join(directory, `coc-todolist.json`)
   }
 
   public async load(): Promise<TodoData[]> {

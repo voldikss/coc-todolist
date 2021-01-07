@@ -16,7 +16,7 @@ Todolist manager extension for [coc.nvim](https://github.com/neoclide/coc.nvim)
 ## Features
 
 - Allow to set a reminder for a todo item
-- Auto upload/download todolists with gist(require github token: [click to generate](https://github.com/settings/tokens/new?scopes=gist&description=coc-todolist%20gist))
+- Auto upload/download todolists with gist
 - Manage your todolist with CocList
 
 ## Configuration
@@ -41,7 +41,8 @@ Todolist manager extension for [coc.nvim](https://github.com/neoclide/coc.nvim)
 - `:CocCommand todolist.download`: download todolist from gist
 - `:CocCommand todolist.export`: export todolist as a json/yaml file
 - `:CocCommand todolist.clear`: clear all todos
-- `:CocCommand todolist.browserOpenGist`: open todolist gist in [gist.github.com](https://gist.github.com/)
+- `:CocCommand todolist.gist.openBrowser`: open todolist gist in [gist.github.com](https://gist.github.com/)
+- `:CocCommand todolist.gist.genToken`: generate a token used to update gist
 
 ## CocList
 

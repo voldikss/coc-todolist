@@ -4,25 +4,28 @@ import { fsStat } from '../util/fs'
 import path from 'path'
 import DB from '../util/db'
 import { Gist } from '../service/gists'
-import Profile from '../profile'
+import GistConfig from '../util/gistcfg'
 import { createTodo, createTodoEditBuffer } from '../util/helper'
 
 export default class Todoist {
   private gist: Gist
 
-  constructor(private db: DB, private profile: Profile) {
+  constructor(private db: DB, private gistcfg: GistConfig) {
     this.gist = new Gist()
   }
 
-  private async getGitHubToken(): Promise<string> {
-    let token: string = await this.profile.fetch('userToken')
-    if (!token) {
-      token = await window.requestInput('Input github token')
-      if (!(token?.trim().length > 0)) return
-      token = token.trim()
-      await this.profile.push('userToken', token)
+  private async getGitHubToken(): Promise<string | null> {
+    const token = await this.gistcfg.fetch('userToken')
+    if (token) {
+      this.gist.token = token
+      return token
+    } else {
+      window.showMessage(
+        'Token missed, run `:CocCommand todolist.gist.genToken` and try again',
+        'warning'
+      )
+      return null
     }
-    return token
   }
 
   public async create(): Promise<void> {
@@ -34,12 +37,12 @@ export default class Todoist {
     const statusItem = window.createStatusBarItem(0, { progress: true })
     statusItem.text = 'downloading todolist'
     // if gist id exists, use that to download gist
-    let gistid: string = await this.profile.fetch('gistId')
+    let gistid: string = await this.gistcfg.fetch('gistId')
     if (!(gistid?.trim().length > 0)) {
       gistid = await window.requestInput('Input gist id')
       if (!(gistid?.trim().length > 0)) return
       gistid = gistid.trim()
-      await this.profile.push('gistId', gistid)
+      await this.gistcfg.push('gistId', gistid)
     }
 
     statusItem.show()
@@ -64,10 +67,10 @@ export default class Todoist {
       }
 
       // update github username
-      await this.profile.push('userName', gist.owner.login)
+      await this.gistcfg.push('userName', gist.owner.login)
     } else if (res.status === 404) {
       window.showMessage('Remote gist was not found', 'error')
-      await this.profile.delete('gistId')
+      await this.gistcfg.delete('gistId')
       return
     } else {
       window.showMessage('Downloading error', 'error')
@@ -79,7 +82,8 @@ export default class Todoist {
     const statusItem = window.createStatusBarItem(0, { progress: true })
     statusItem.text = 'uploading todolist'
 
-    this.gist.token = await this.getGitHubToken() // TODO
+    const token = await this.getGitHubToken() // TODO
+    if (!token) return
 
     const record = await this.db.load()
     const todo = record.map(i => i.todo)
@@ -95,7 +99,7 @@ export default class Todoist {
     const data = Buffer.from(JSON.stringify(gistObj))
 
     // If gistId exists, upload
-    const gistId: string = await this.profile.fetch('gistId')
+    const gistId: string = await this.gistcfg.fetch('gistId')
     if (gistId?.trim().length > 0) {
       statusItem.show()
       const res = await this.gist.patch(`/gists/${gistId}`, data)
@@ -104,24 +108,24 @@ export default class Todoist {
         window.showMessage('Updated gist todolist')
         // update github username
         const gist: GistObject = JSON.parse(res.responseText)
-        await this.profile.push('userName', gist.owner.login)
+        await this.gistcfg.push('userName', gist.owner.login)
         return
       } else if (res.status !== 404) {
         window.showMessage('Failed to uploaded todo gist', 'error')
         return
       } else { // 404: delete gistId and create a new gist
         window.showMessage('Remote gist was not found', 'error')
-        await this.profile.delete('gistId')
+        await this.gistcfg.delete('gistId')
       }
     }
     // gistId doesn't exists, fallback to creating
     const res = await this.gist.post('/gists', data)
     if (res.status == 201 && res.responseText) {
       const gist: GistObject = JSON.parse(res.responseText)
-      await this.profile.push('gistId', gist.id)
+      await this.gistcfg.push('gistId', gist.id)
       window.showMessage('Uploaded a new todolist to gist')
       // update github username
-      await this.profile.push('userName', gist.owner.login)
+      await this.gistcfg.push('userName', gist.owner.login)
     } else {
       window.showMessage('Failed to create todolist from gist', 'error')
       return

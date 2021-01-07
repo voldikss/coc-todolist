@@ -1,6 +1,6 @@
 {
   "name": "coc-todolist",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "todolist/task manager extension for coc.nvim",
   "main": "lib/index.js",
   "repository": {
@@ -62,8 +62,12 @@
         "command": "todolist.clear"
       },
       {
+        "title": "generate gist token",
+        "command": "todolist.gist.genToken"
+      },
+      {
         "title": "clear open todolist gist",
-        "command": "todolist.browserOpenGist"
+        "command": "todolist.gist.openBrowser"
       }
     ]
   },
@@ -73,15 +77,18 @@
     "@chemzqm/neovim": "^5.2.10",
     "@types/js-yaml": "^3.12.5",
     "@types/node": "^14.14.16",
+    "@types/node-fetch": "^2.3.3",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.11.1",
     "@typescript-eslint/parser": "^4.11.1",
     "@voldikss/tsconfig": "^1.0.0",
     "coc.nvim": "^0.0.80",
     "eslint": "^7.16.0",
+    "express": "^4.16.4",
     "js-yaml": "^3.14.1",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.32",
+    "node-fetch": "^2.6.1",
     "path": "^0.12.7",
     "request-light": "^0.4.0",
     "rimraf": "^3.0.2",

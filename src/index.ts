@@ -4,8 +4,9 @@ import TodoList from './lists/todolist'
 import Todoist from './commands/todoist'
 import Guardian from './commands/guardian'
 import DB from './util/db'
-import Profile from './profile'
+import GistConfig from './util/gistcfg'
 import { registerVimInternalEvents } from './events'
+import { GitHubOAuthService } from './service/github.oauth'
 
 export async function activate(context: ExtensionContext): Promise<void> {
   const { subscriptions, storagePath } = context
@@ -28,9 +29,10 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   registerVimInternalEvents(context)
 
-  const db = new DB(storagePath, 'todolist')
-  const profile = new Profile(storagePath)
-  const todo = new Todoist(db, profile)
+  const db = new DB(storagePath)
+  const gistcfg = new GistConfig(storagePath)
+  const todo = new Todoist(db, gistcfg)
+  const oauth = new GitHubOAuthService(gistcfg)
 
   const guard = new Guardian(db)
   subscriptions.push(guard)
@@ -75,10 +77,19 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   subscriptions.push(
     commands.registerCommand(
-      'todolist.browserOpenGist',
+      'todolist.gist.genToken',
       async () => {
-        const userName = await profile.fetch('userName')
-        const gistId = await profile.fetch('gistId')
+        await oauth.start()
+      }
+    )
+  )
+
+  subscriptions.push(
+    commands.registerCommand(
+      'todolist.gist.openBrowser',
+      async () => {
+        const userName = await gistcfg.fetch('userName')
+        const gistId = await gistcfg.fetch('gistId')
         if (userName && gistId) {
           const url = `https://gist.github.com/${userName}/${gistId}`
           nvim.call('coc#util#open_url', url, true)
