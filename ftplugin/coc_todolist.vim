@@ -51,9 +51,9 @@ function! s:rematch() abort
   call matchadd('CocTodolistSelect', pattern)
 endfunction
 
-nmap <buffer><silent> j      :<C-u>call <SID>map_down()<CR>
-nmap <buffer><silent> k      :<C-u>call <SID>map_up()<CR>
-nmap <buffer><silent> <down> :<C-u>call <SID>map_down()<CR>
-nmap <buffer><silent> <up>   :<C-u>call <SID>map_up()<CR>
-nmap <buffer><silent> gg     :<C-u>call <SID>map_gg()<CR>
-nmap <buffer><silent> G      :<C-u>call <SID>map_G()<CR>
+nnoremap <buffer><silent> j      :<C-u>call <SID>map_down()<CR>
+nnoremap <buffer><silent> k      :<C-u>call <SID>map_up()<CR>
+nnoremap <buffer><silent> <down> :<C-u>call <SID>map_down()<CR>
+nnoremap <buffer><silent> <up>   :<C-u>call <SID>map_up()<CR>
+nnoremap <buffer><silent> gg     :<C-u>call <SID>map_gg()<CR>
+nnoremap <buffer><silent> G      :<C-u>call <SID>map_G()<CR>
